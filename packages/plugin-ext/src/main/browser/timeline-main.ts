@@ -22,6 +22,12 @@ import URI from '@theia/core/lib/common/uri';
 import { MAIN_RPC_CONTEXT, TimelineExt } from '../../common/plugin-api-rpc';
 import { Timeline, TimelineChangeEvent, TimelineOptions } from '@theia/timeline/lib/common/timeline-protocol';
 
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+// some code copied and modified from https://github.com/microsoft/vscode/blob/afacd2bdfe7060f09df9b9139521718915949757/src/vs/workbench/api/browser/mainThreadTimeline.ts
+
 export class TimelineMainImpl implements TimelineMain {
     private readonly proxy: TimelineExt;
     private readonly service: TimelineService;

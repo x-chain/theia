@@ -14,6 +14,12 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+// some code copied and modified from https://github.com/microsoft/vscode/blob/3aab025eaebde6c9544293b6c7554f3f583e15d0/src/vs/workbench/contrib/timeline/common/timeline.ts
+
 import { CancellationToken, Command, Disposable, Event } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 

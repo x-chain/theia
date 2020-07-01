@@ -25,6 +25,12 @@ import { CommandRegistryImpl } from './command-registry';
 import * as theia from '@theia/plugin';
 import { Timeline, TimelineItem, TimelineOptions } from '@theia/timeline/lib/common/timeline-protocol';
 
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+// some code copied and modified from https://github.com/microsoft/vscode/blob/afacd2bdfe7060f09df9b9139521718915949757/src/vs/workbench/api/common/extHostTimeline.ts
+
 export class TimelineExtImpl implements TimelineExt {
     private readonly proxy: TimelineMain;
     private providers = new Map<string, theia.TimelineProvider>();
