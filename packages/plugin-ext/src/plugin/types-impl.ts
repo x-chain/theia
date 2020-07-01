@@ -1808,6 +1808,10 @@ export class Task {
     }
 }
 
+export class Task2 extends Task {
+    detail?: string;
+}
+
 export class DebugAdapterExecutable {
     /**
      * The command or path of the debug adapter executable.
@@ -2050,6 +2054,23 @@ export enum WebviewPanelTargetArea {
     Right = 'right',
     Bottom = 'bottom'
 }
+
+/**
+ * Possible kinds of UI that can use extensions.
+ */
+export enum UIKind {
+
+    /**
+     * Extensions are accessed from a desktop application.
+     */
+    Desktop = 1,
+
+    /**
+     * Extensions are accessed from a web browser.
+     */
+    Web = 2
+}
+
 export class CallHierarchyItem {
     _sessionId?: string;
     _itemId?: string;

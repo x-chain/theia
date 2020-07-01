@@ -190,12 +190,16 @@ export class VSXExtension implements VSXExtensionData, TreeElement {
     }
 
     get licenseUrl(): string | undefined {
-        const plugin = this.plugin;
-        const licenseUrl = plugin && plugin.metadata.model.licenseUrl;
+        let licenseUrl = this.data['licenseUrl'];
         if (licenseUrl) {
-            return new Endpoint({ path: licenseUrl }).getRestUrl().toString();
+            return licenseUrl;
+        } else {
+            const plugin = this.plugin;
+            licenseUrl = plugin && plugin.metadata.model.licenseUrl;
+            if (licenseUrl) {
+                return new Endpoint({ path: licenseUrl }).getRestUrl().toString();
+            }
         }
-        return this.data['licenseUrl'];
     }
 
     get repository(): string | undefined {
@@ -350,7 +354,7 @@ export class VSXExtensionEditorComponent extends AbstractVSXExtensionComponent {
     render(): React.ReactNode {
         const {
             builtin, preview, id, iconUrl, publisher, displayName, description,
-            averageRating, downloadCount, repository, license, readme
+            averageRating, downloadCount, repository, license, readme, version
         } = this.props.extension;
         return <React.Fragment>
             <div className='header'>
@@ -374,6 +378,7 @@ export class VSXExtensionEditorComponent extends AbstractVSXExtensionComponent {
                         {averageRating !== undefined && <span className='average-rating' onClick={this.openAverageRating}>{this.renderStars()}</span>}
                         {repository && <span className='repository' onClick={this.openRepository}>Repository</span>}
                         {license && <span className='license' onClick={this.openLicense}>{license}</span>}
+                        {version && <span className='version'>{version}</span>}
                     </div>
                     <div className='description noWrapInfo'>{description}</div>
                     {this.renderAction()}

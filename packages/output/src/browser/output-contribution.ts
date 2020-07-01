@@ -14,7 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import URI from '@theia/core/lib/common/uri';
 import { Widget } from '@theia/core/lib/browser/widgets/widget';
 import { MaybePromise } from '@theia/core/lib/common/types';
@@ -24,6 +24,7 @@ import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-con
 import { OutputWidget } from './output-widget';
 import { OutputContextMenu } from './output-context-menu';
 import { OutputUri } from '../common/output-uri';
+import { ClipboardService } from '@theia/core/lib/browser/clipboard-service';
 
 export namespace OutputCommands {
 
@@ -100,10 +101,16 @@ export namespace OutputCommands {
         category: OUTPUT_CATEGORY
     };
 
+    export const COPY_ALL: Command = {
+        id: 'output:copy-all',
+    };
 }
 
 @injectable()
 export class OutputContribution extends AbstractViewContribution<OutputWidget> implements OpenHandler {
+
+    @inject(ClipboardService)
+    protected readonly clipboardService: ClipboardService;
 
     readonly id: string = `${OutputWidget.ID}-opener`;
 
@@ -122,19 +129,50 @@ export class OutputContribution extends AbstractViewContribution<OutputWidget> i
     registerCommands(registry: CommandRegistry): void {
         super.registerCommands(registry);
         registry.registerCommand(OutputCommands.CLEAR__WIDGET, {
-            isEnabled: widget => this.withWidget(widget),
-            isVisible: widget => this.withWidget(widget),
-            execute: () => this.widget.then(widget => widget.clear())
+            isEnabled: arg => {
+                if (arg instanceof Widget) {
+                    return arg instanceof OutputWidget;
+                }
+                return this.shell.currentWidget instanceof OutputWidget;
+            },
+            isVisible: arg => {
+                if (arg instanceof Widget) {
+                    return arg instanceof OutputWidget;
+                }
+                return this.shell.currentWidget instanceof OutputWidget;
+            },
+            execute: () => {
+                this.widget.then(widget => {
+                    this.withWidget(widget, output => {
+                        output.clear();
+                        return true;
+                    });
+                });
+            }
         });
         registry.registerCommand(OutputCommands.LOCK__WIDGET, {
             isEnabled: widget => this.withWidget(widget, output => !output.isLocked),
             isVisible: widget => this.withWidget(widget, output => !output.isLocked),
-            execute: () => this.widget.then(widget => widget.lock())
+            execute: widget => this.withWidget(widget, output => {
+                output.lock();
+                return true;
+            })
         });
         registry.registerCommand(OutputCommands.UNLOCK__WIDGET, {
             isEnabled: widget => this.withWidget(widget, output => output.isLocked),
             isVisible: widget => this.withWidget(widget, output => output.isLocked),
-            execute: () => this.widget.then(widget => widget.unlock())
+            execute: widget => this.withWidget(widget, output => {
+                output.unlock();
+                return true;
+            })
+        });
+        registry.registerCommand(OutputCommands.COPY_ALL, {
+            execute: () => {
+                const textToCopy = this.tryGetWidget()?.getText();
+                if (textToCopy) {
+                    this.clipboardService.writeText(textToCopy);
+                }
+            }
         });
     }
 
@@ -142,6 +180,10 @@ export class OutputContribution extends AbstractViewContribution<OutputWidget> i
         super.registerMenus(registry);
         registry.registerMenuAction(OutputContextMenu.TEXT_EDIT_GROUP, {
             commandId: CommonCommands.COPY.id
+        });
+        registry.registerMenuAction(OutputContextMenu.TEXT_EDIT_GROUP, {
+            commandId: OutputCommands.COPY_ALL.id,
+            label: 'Copy All'
         });
         registry.registerMenuAction(OutputContextMenu.COMMAND_GROUP, {
             commandId: quickCommand.id,
@@ -167,11 +209,9 @@ export class OutputContribution extends AbstractViewContribution<OutputWidget> i
     }
 
     protected withWidget(
-        widget: Widget | undefined,
+        widget: Widget | undefined = this.tryGetWidget(),
         predicate: (output: OutputWidget) => boolean = () => true
     ): boolean | false {
-
         return widget instanceof OutputWidget ? predicate(widget) : false;
     }
-
 }

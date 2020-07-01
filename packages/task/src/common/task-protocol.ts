@@ -28,15 +28,15 @@ export enum DependsOrder {
 }
 
 export enum RevealKind {
-    Always,
-    Silent,
-    Never
+    Always = 'always',
+    Silent = 'silent',
+    Never = 'never'
 }
 
 export enum PanelKind {
-    Shared,
-    Dedicated,
-    New
+    Shared = 'shared',
+    Dedicated = 'dedicated',
+    New = 'new'
 }
 
 export interface TaskOutputPresentation {
@@ -116,6 +116,7 @@ export interface TaskCustomization {
     group?: 'build' | 'test' | 'none' | { kind: 'build' | 'test' | 'none', isDefault: true };
     problemMatcher?: string | ProblemMatcherContribution | (string | ProblemMatcherContribution)[];
     presentation?: TaskOutputPresentation;
+    detail?: string;
 
     /** Whether the task is a background task or not. */
     isBackground?: boolean;
