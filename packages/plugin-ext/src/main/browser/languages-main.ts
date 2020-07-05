@@ -41,8 +41,7 @@ import {
 } from '../../common/plugin-api-rpc-model';
 import { RPCProtocol } from '../../common/rpc-protocol';
 import { fromLanguageSelector } from '../../plugin/type-converters';
-import { DocumentFilter, MonacoModelIdentifier, testGlob } from 'monaco-languageclient/lib';
-import { MonacoLanguages } from '@theia/monaco/lib/browser/monaco-languages';
+import { MonacoLanguages, WorkspaceSymbolProvider } from '@theia/monaco/lib/browser/monaco-languages';
 import CoreURI from '@theia/core/lib/common/uri';
 import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import { Emitter } from '@theia/core/lib/common/event';
@@ -51,12 +50,11 @@ import * as vst from 'vscode-languageserver-types';
 import * as theia from '@theia/plugin';
 import { UriComponents } from '../../common/uri-components';
 import { CancellationToken } from '@theia/core/lib/common';
-import { LanguageSelector } from '@theia/languages/lib/common/language-selector';
+import { LanguageSelector } from '@theia/callhierarchy/lib/common/language-selector';
 import { CallHierarchyService, CallHierarchyServiceProvider, Caller, Definition } from '@theia/callhierarchy/lib/browser';
 import { toDefinition, toUriComponents, fromDefinition, fromPosition, toCaller } from './callhierarchy/callhierarchy-type-converters';
 import { Position, DocumentUri } from 'vscode-languageserver-types';
 import { ObjectIdentifier } from '../../common/object-identifier';
-import { WorkspaceSymbolProvider } from '@theia/languages/lib/browser/language-client-services';
 import { mixin } from '../../common/types';
 
 @injectable()
@@ -778,25 +776,6 @@ export class LanguagesMainImpl implements LanguagesMain, Disposable {
                     return undefined!;
                 })
         };
-    }
-
-    protected matchModel(selector: LanguageSelector | undefined, model: MonacoModelIdentifier): boolean {
-        if (Array.isArray(selector)) {
-            return selector.some(filter => this.matchModel(filter, model));
-        }
-        if (DocumentFilter.is(selector)) {
-            if (!!selector.language && selector.language !== model.languageId) {
-                return false;
-            }
-            if (!!selector.scheme && selector.scheme !== model.uri.scheme) {
-                return false;
-            }
-            if (!!selector.pattern && !testGlob(selector.pattern, model.uri.path)) {
-                return false;
-            }
-            return true;
-        }
-        return selector === model.languageId;
     }
 
     protected resolveRenameLocation(handle: number, model: monaco.editor.ITextModel,

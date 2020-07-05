@@ -69,9 +69,6 @@
       "@theia/keymaps/lib/*": [
         "packages/keymaps/src/*"
       ],
-      "@theia/languages/lib/*": [
-        "packages/languages/src/*"
-      ],
       "@theia/markers/lib/*": [
         "packages/markers/src/*"
       ],
@@ -161,6 +158,9 @@
       ],
       "@theia/vsx-registry/lib/*": [
         "packages/vsx-registry/src/*"
+      ],
+      "@theia/languages/*": [
+        "packages/languages/*"
       ]
     }
   }
