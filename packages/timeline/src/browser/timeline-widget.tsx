@@ -41,7 +41,6 @@ import { EditorPreviewWidget } from '@theia/editor-preview/lib/browser';
 export class TimelineWidget extends BaseWidget {
 
     protected panel: Panel;
-
     static ID = 'timeline-view';
 
     @inject(TimelineTreeWidget) protected readonly resourceWidget: TimelineTreeWidget;
@@ -71,20 +70,22 @@ export class TimelineWidget extends BaseWidget {
         this.containerLayout.addWidget(this.timelineEmptyWidget);
 
         this.refresh();
-        this.timelineService.onDidChangeTimeline(event => {
-            if (event.uri && event.uri === this.editorManager.currentEditor?.getResourceUri()?.toString()) {
-                this.resourceWidget.loadTimeline(new URI(event.uri), event.reset);
-            } else {
-                const uri = this.editorManager.currentEditor?.getResourceUri();
-                if (uri) {
-                    this.resourceWidget.loadTimeline(uri, event.reset);
+        this.refreshList();
+        this.toDispose.push(this.timelineService.onDidChangeTimeline(event => {
+                if (event.uri && event.uri === this.editorManager.currentEditor?.getResourceUri()?.toString()) {
+                    this.resourceWidget.loadTimeline(new URI(event.uri), event.reset);
+                } else {
+                    const uri = this.editorManager.currentEditor?.getResourceUri();
+                    if (uri) {
+                        this.resourceWidget.loadTimeline(uri, event.reset);
+                    }
                 }
-            }
-        });
-        this.editorManager.onCurrentEditorChanged(async editor => {
+            })
+        );
+        this.toDispose.push(this.editorManager.onCurrentEditorChanged(async editor => {
             if (editor) {
                 const uri = editor.getResourceUri();
-                if (uri?.scheme === 'file') {
+                if (uri) {
                     this.timelineEmptyWidget.hide();
                     this.resourceWidget.show();
                     this.resourceWidget.loadTimeline(uri, true);
@@ -102,25 +103,30 @@ export class TimelineWidget extends BaseWidget {
                 this.resourceWidget.hide();
                 this.timelineEmptyWidget.show();
             }
-        });
+        }));
         const toolbarItem = {
             id: 'timeline-refresh-toolbar-item',
             command: 'timeline-refresh',
             tooltip: 'Refresh',
             icon: 'fa fa-refresh'
         };
-        this.commandRegistry.registerCommand({ id: toolbarItem.command }, {
+        this.toDispose.push(this.commandRegistry.registerCommand({id: toolbarItem.command}, {
             execute: widget => this.checkWidget(widget, () => this.refreshList()),
             isEnabled: widget => this.checkWidget(widget, () => true),
             isVisible: widget => this.checkWidget(widget, () => true)
-        });
-        this.tabBarToolbar.registerItem(toolbarItem);
+        }));
+        this.toDispose.push(this.tabBarToolbar.registerItem(toolbarItem));
     }
 
     private refreshList(): void {
         const uri = this.editorManager.currentEditor?.getResourceUri();
         if (uri) {
+            this.timelineEmptyWidget.hide();
+            this.resourceWidget.show();
             this.resourceWidget.loadTimeline(uri, true);
+        } else {
+            this.timelineEmptyWidget.show();
+            this.resourceWidget.hide();
         }
     }
 
@@ -152,6 +158,7 @@ export class TimelineWidget extends BaseWidget {
     protected onUpdateRequest(msg: Message): void {
         MessageLoop.sendMessage(this.resourceWidget, msg);
         MessageLoop.sendMessage(this.timelineEmptyWidget, msg);
+        this.refreshList();
         super.onUpdateRequest(msg);
     }
 

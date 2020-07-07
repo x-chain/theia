@@ -38,13 +38,14 @@ export class TimelineContribution implements FrontendApplicationContribution {
 
     async onDidInitializeLayout?(app: FrontendApplication): Promise<void> {
         const explorer = await this.widgetManager.getWidget(EXPLORER_VIEW_CONTAINER_ID);
-        const timeline = await this.widgetManager.getOrCreateWidget(TimelineWidget.ID);
-        this.timelineService.onDidChangeProviders( event => {
+        let timeline: TimelineWidget;
+        this.timelineService.onDidChangeProviders( async event => {
             if (explorer instanceof ViewContainer) {
                 if (event.added && event.added.length > 0 && explorer.getTrackableWidgets().indexOf(timeline) === -1) {
+                    timeline = await this.widgetManager.getOrCreateWidget(TimelineWidget.ID);
                     explorer.addWidget(timeline, { initiallyCollapsed: true });
                 } else if (event.removed && this.timelineService.getSources().length === 0) {
-                    explorer.removeWidget(timeline);
+                    timeline.close();
                 }
             }
         });
