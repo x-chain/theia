@@ -51,12 +51,7 @@ export class TimelineService {
         }
         this.onDidChangeProvidersEmitter.fire({ added: [id] });
 
-        return {
-            dispose: () => {
-                this.providers.delete(id);
-                this.onDidChangeProvidersEmitter.fire({ removed: [id] });
-            }
-        };
+        return Disposable.create(() => this.unregisterTimelineProvider(id));
     }
 
     unregisterTimelineProvider(id: string): void {
