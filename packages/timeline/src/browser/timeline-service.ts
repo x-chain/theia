@@ -38,13 +38,6 @@ export class TimelineService {
     registerTimelineProvider(provider: TimelineProvider): Disposable {
         const id = provider.id;
 
-        const existing = this.providers.get(id);
-        if (existing) {
-            try {
-                existing.dispose();
-            } catch { }
-        }
-
         this.providers.set(id, provider);
         if (provider.onDidChange) {
             this.providerSubscriptions.set(id, provider.onDidChange(e => this.onDidChangeTimelineEmitter.fire(e)));
