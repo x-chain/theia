@@ -23,6 +23,7 @@ import {
     ApplicationShell,
     BaseWidget,
     MessageLoop,
+    NavigatableWidget,
     Panel,
     PanelLayout,
     Widget
@@ -72,7 +73,8 @@ export class TimelineWidget extends BaseWidget {
         this.refresh();
         this.refreshList();
         this.toDispose.push(this.timelineService.onDidChangeTimeline(event => {
-                if (event.uri && event.uri === this.editorManager.currentEditor?.getResourceUri()?.toString()) {
+                const current = this.editorManager.currentEditor;
+                if (NavigatableWidget.is(current) && event.uri && event.uri === current.getResourceUri()?.toString()) {
                     this.resourceWidget.loadTimeline(new URI(event.uri), event.reset);
                 } else {
                     const uri = this.editorManager.currentEditor?.getResourceUri();
@@ -83,7 +85,7 @@ export class TimelineWidget extends BaseWidget {
             })
         );
         this.toDispose.push(this.editorManager.onCurrentEditorChanged(async editor => {
-            if (editor) {
+            if (NavigatableWidget.is(editor)) {
                 const uri = editor.getResourceUri();
                 if (uri) {
                     this.timelineEmptyWidget.hide();
@@ -119,7 +121,8 @@ export class TimelineWidget extends BaseWidget {
     }
 
     private refreshList(): void {
-        const uri = this.editorManager.currentEditor?.getResourceUri();
+        const current = this.editorManager.currentEditor;
+        const uri = NavigatableWidget.is(current) ? current.getResourceUri() : undefined;
         if (uri) {
             this.timelineEmptyWidget.hide();
             this.resourceWidget.show();
