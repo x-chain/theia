@@ -32,7 +32,6 @@ import { TimelineTreeWidget } from './timeline-tree-widget';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { TimelineService } from './timeline-service';
 import { CommandRegistry } from '@theia/core/lib/common';
-import { TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { TimelineEmptyWidget } from './timeline-empty-widget';
 import { toArray } from '@phosphor/algorithm';
 import URI from '@theia/core/lib/common/uri';
@@ -46,7 +45,6 @@ export class TimelineWidget extends BaseWidget {
 
     @inject(TimelineTreeWidget) protected readonly resourceWidget: TimelineTreeWidget;
     @inject(TimelineService) protected readonly timelineService: TimelineService;
-    @inject(TabBarToolbarRegistry) protected readonly tabBarToolbar: TabBarToolbarRegistry;
     @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry;
     @inject(ApplicationShell) protected readonly applicationShell: ApplicationShell;
     @inject(TimelineEmptyWidget) protected readonly timelineEmptyWidget: TimelineEmptyWidget;
@@ -106,21 +104,9 @@ export class TimelineWidget extends BaseWidget {
                 this.timelineEmptyWidget.show();
             }
         }));
-        const toolbarItem = {
-            id: 'timeline-refresh-toolbar-item',
-            command: 'timeline-refresh',
-            tooltip: 'Refresh',
-            icon: 'fa fa-refresh'
-        };
-        this.toDispose.push(this.commandRegistry.registerCommand({id: toolbarItem.command}, {
-            execute: widget => this.checkWidget(widget, () => this.refreshList()),
-            isEnabled: widget => this.checkWidget(widget, () => true),
-            isVisible: widget => this.checkWidget(widget, () => true)
-        }));
-        this.toDispose.push(this.tabBarToolbar.registerItem(toolbarItem));
     }
 
-    private refreshList(): void {
+    refreshList(): void {
         const current = this.editorManager.currentEditor;
         const uri = NavigatableWidget.is(current) ? current.getResourceUri() : undefined;
         if (uri) {
@@ -131,13 +117,6 @@ export class TimelineWidget extends BaseWidget {
             this.timelineEmptyWidget.show();
             this.resourceWidget.hide();
         }
-    }
-
-    private checkWidget<T>(widget: Widget, cb: () => T): T | false {
-        if (widget instanceof TimelineWidget && widget.id === TimelineWidget.ID) {
-            return cb();
-        }
-        return false;
     }
 
     protected get containerLayout(): PanelLayout {

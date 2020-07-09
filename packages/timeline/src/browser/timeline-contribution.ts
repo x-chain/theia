@@ -19,12 +19,14 @@ import {
     FrontendApplicationContribution,
     FrontendApplication,
     ViewContainer,
-    WidgetManager
+    WidgetManager, Widget
 } from '@theia/core/lib/browser';
 import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
 import { EXPLORER_VIEW_CONTAINER_ID } from '@theia/navigator/lib/browser';
 import { TimelineWidget } from './timeline-widget';
 import { TimelineService } from './timeline-service';
+import { CommandRegistry } from '@theia/core/lib/common';
+import { TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 
 @injectable()
 export class TimelineContribution implements FrontendApplicationContribution {
@@ -35,6 +37,10 @@ export class TimelineContribution implements FrontendApplicationContribution {
     protected readonly widgetManager: WidgetManager;
     @inject(TimelineService)
     protected readonly timelineService: TimelineService;
+    @inject(CommandRegistry)
+    protected readonly commandRegistry: CommandRegistry;
+    @inject(TabBarToolbarRegistry)
+    protected readonly tabBarToolbar: TabBarToolbarRegistry;
 
     async onDidInitializeLayout?(app: FrontendApplication): Promise<void> {
         const explorer = await this.widgetManager.getWidget(EXPLORER_VIEW_CONTAINER_ID);
@@ -49,5 +55,28 @@ export class TimelineContribution implements FrontendApplicationContribution {
                 }
             }
         });
+        const toolbarItem = {
+            id: 'timeline-refresh-toolbar-item',
+            command: 'timeline-refresh',
+            tooltip: 'Refresh',
+            icon: 'fa fa-refresh'
+        };
+        this.commandRegistry.registerCommand({ id: toolbarItem.command }, {
+            execute: widget => this.checkWidget(widget, () => {
+                if (timeline) {
+                    timeline.refreshList();
+                }
+            }),
+            isEnabled: widget => this.checkWidget(widget, () => true),
+            isVisible: widget => this.checkWidget(widget, () => true)
+        });
+        this.tabBarToolbar.registerItem(toolbarItem);
+    }
+
+    private checkWidget<T>(widget: Widget, cb: () => T): T | false {
+        if (widget instanceof TimelineWidget && widget.id === TimelineWidget.ID) {
+            return cb();
+        }
+        return false;
     }
 }
