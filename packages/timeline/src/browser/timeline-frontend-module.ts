@@ -34,7 +34,7 @@ import { TimelineContribution } from './timeline-contribution';
 import '../../src/browser/style/index.css';
 
 export default new ContainerModule(bind => {
-    bind(TimelineContribution).toSelf().inRequestScope();
+    bind(TimelineContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(TimelineContribution);
 
     bind(TimelineContextKeyService).toSelf().inSingletonScope();
