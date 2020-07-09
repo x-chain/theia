@@ -553,7 +553,7 @@ export interface WorkspaceExt {
 }
 
 export interface TimelineExt {
-    $getTimeline(id: string, uri: string, options: theia.TimelineOptions, token: CancellationToken, internalOptions?: theia.TimelineOptions): Promise<Timeline | undefined>;
+    $getTimeline(id: string, uri: string, options: theia.TimelineOptions, internalOptions?: theia.TimelineOptions): Promise<Timeline | undefined>;
 }
 
 export interface TimelineMain {

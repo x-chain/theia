@@ -20,7 +20,7 @@
  *--------------------------------------------------------------------------------------------*/
 // some code copied and modified from https://github.com/microsoft/vscode/blob/3aab025eaebde6c9544293b6c7554f3f583e15d0/src/vs/workbench/contrib/timeline/common/timeline.ts
 
-import { CancellationToken, Command, Disposable, Event } from '@theia/core/lib/common';
+import { Command, Disposable, Event } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 
 export class TimelineItem {
@@ -71,7 +71,6 @@ export interface TimelineRequest {
     readonly result: Promise<Timeline | undefined>;
     readonly options: TimelineOptions;
     readonly source: string;
-    readonly tokenSource: CancellationToken;
     readonly uri: URI;
 }
 
@@ -80,7 +79,7 @@ export interface TimelineProvider extends Disposable {
     label: string;
     scheme: string | string[];
     onDidChange?: Event<TimelineChangeEvent>;
-    provideTimeline(uri: URI, options: TimelineOptions, token: CancellationToken ): Promise<Timeline | undefined>;
+    provideTimeline(uri: URI, options: TimelineOptions ): Promise<Timeline | undefined>;
 }
 
 export interface TimelineSource {

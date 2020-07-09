@@ -17,7 +17,7 @@ import { Plugin, TimelineExt, TimelineMain } from '../common';
 import { RPCProtocol } from '../common/rpc-protocol';
 import { Disposable, ThemeIcon } from './types-impl';
 import { PLUGIN_RPC_CONTEXT } from '../common';
-import { CancellationToken } from '@theia/core/lib/common';
+import { CancellationToken } from '@theia/core/lib/common/cancellation';
 import { DisposableCollection } from '@theia/core/lib/common/disposable';
 import { URI } from 'vscode-uri';
 import { PluginIconPath } from './plugin-icon-path';
@@ -53,9 +53,9 @@ export class TimelineExtImpl implements TimelineExt {
         });
     }
 
-    async $getTimeline(id: string, uri: string, options: TimelineOptions, token: CancellationToken, internalOptions?: TimelineOptions): Promise<Timeline | undefined> {
+    async $getTimeline(id: string, uri: string, options: TimelineOptions, internalOptions?: TimelineOptions): Promise<Timeline | undefined> {
         const provider = this.providers.get(id);
-        const timeline = await provider?.provideTimeline(URI.parse(uri), options, token);
+        const timeline = await provider?.provideTimeline(URI.parse(uri), options, CancellationToken.None);
         let items: Map<string, theia.TimelineItem> | undefined;
         if (timeline) {
             let itemsByUri = this.itemsBySourceAndUriMap.get(id);

@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { CancellationToken, Command, CommandRegistry, MenuModelRegistry, MenuPath } from '@theia/core/lib/common';
+import { Command, CommandRegistry, MenuModelRegistry, MenuPath } from '@theia/core/lib/common';
 import { TreeWidget, TreeProps, NodeProps, TREE_NODE_SEGMENT_GROW_CLASS } from '@theia/core/lib/browser/tree';
 import { ContextMenuRenderer } from '@theia/core/lib/browser';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
@@ -111,7 +111,7 @@ export class TimelineTreeWidget extends TreeWidget {
         let timeline = this.timelinesBySource.get(source);
         const cursor = timeline?.cursor;
         const options = { cursor: reset ? undefined : cursor, limit: TimelineTreeWidget.PAGE_SIZE };
-        const timelineRequest = this.timelineService.getTimeline(source, uri, options, CancellationToken.None);
+        const timelineRequest = this.timelineService.getTimeline(source, uri, options);
         if (timelineRequest) {
             const timelineResult = await timelineRequest.result;
             if (timelineResult) {

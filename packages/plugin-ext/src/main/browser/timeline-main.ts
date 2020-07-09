@@ -17,7 +17,7 @@ import { interfaces } from 'inversify';
 import { TimelineMain } from '../../common/plugin-api-rpc';
 import { RPCProtocol } from '../../common/rpc-protocol';
 import { TimelineService } from '@theia/timeline/lib/browser/timeline-service';
-import { CancellationToken, Emitter } from '@theia/core/lib/common';
+import { Emitter } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 import { MAIN_RPC_CONTEXT, TimelineExt } from '../../common/plugin-api-rpc';
 import { Timeline, TimelineChangeEvent, TimelineOptions } from '@theia/timeline/lib/common/timeline-protocol';
@@ -52,8 +52,8 @@ export class TimelineMainImpl implements TimelineMain {
             label,
             scheme,
             onDidChange: onDidChange.event,
-            async provideTimeline(uri: URI, options: TimelineOptions, token: CancellationToken): Promise<Timeline | undefined> {
-                return proxy.$getTimeline(id, uri.toString(), options, token);
+            async provideTimeline(uri: URI, options: TimelineOptions): Promise<Timeline | undefined> {
+                return proxy.$getTimeline(id, uri.toString(), options);
             },
             dispose(): void {
                 emitters.delete(id);

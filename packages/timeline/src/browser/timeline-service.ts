@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import { injectable } from 'inversify';
-import { CancellationToken, Disposable, Emitter, Event } from '@theia/core/lib/common';
+import { Disposable, Emitter, Event } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 import {
     TimelineChangeEvent, TimelineOptions,
@@ -74,7 +74,7 @@ export class TimelineService {
         return result;
     }
 
-    getTimeline(id: string, uri: URI, options: TimelineOptions, tokenSource: CancellationToken): TimelineRequest | undefined {
+    getTimeline(id: string, uri: URI, options: TimelineOptions): TimelineRequest | undefined {
         const provider = this.providers.get(id);
         if (!provider) {
             return undefined;
@@ -87,7 +87,7 @@ export class TimelineService {
         }
 
         return {
-            result: provider.provideTimeline(uri, options, tokenSource)
+            result: provider.provideTimeline(uri, options)
                 .then(result => {
                     if (!result) {
                         return undefined;
@@ -97,7 +97,6 @@ export class TimelineService {
                 }),
             options: options,
             source: provider.id,
-            tokenSource: tokenSource,
             uri: uri
         };
     }
