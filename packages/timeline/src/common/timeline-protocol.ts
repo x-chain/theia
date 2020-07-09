@@ -67,13 +67,6 @@ export interface Timeline {
     items: TimelineItem[];
 }
 
-export interface TimelineRequest {
-    readonly result: Promise<Timeline | undefined>;
-    readonly options: TimelineOptions;
-    readonly source: string;
-    readonly uri: URI;
-}
-
 export interface TimelineProvider extends Disposable {
     id: string;
     label: string;

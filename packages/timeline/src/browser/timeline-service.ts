@@ -18,9 +18,10 @@ import { injectable } from 'inversify';
 import { Disposable, Emitter, Event } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 import {
+    Timeline,
     TimelineChangeEvent, TimelineOptions,
     TimelineProvider,
-    TimelineProvidersChangeEvent, TimelineRequest,
+    TimelineProvidersChangeEvent,
     TimelineSource
 } from '../common/timeline-protocol';
 
@@ -74,30 +75,25 @@ export class TimelineService {
         return result;
     }
 
-    getTimeline(id: string, uri: URI, options: TimelineOptions): TimelineRequest | undefined {
+    getTimeline(id: string, uri: URI, options: TimelineOptions): Promise<Timeline | undefined> {
         const provider = this.providers.get(id);
         if (!provider) {
-            return undefined;
+            return Promise.resolve(undefined);
         }
 
         if (typeof provider.scheme === 'string') {
             if (provider.scheme !== '*' && provider.scheme !== uri.scheme) {
-                return undefined;
+                return Promise.resolve(undefined);
             }
         }
 
-        return {
-            result: provider.provideTimeline(uri, options)
-                .then(result => {
-                    if (!result) {
-                        return undefined;
-                    }
-                    result.items = result.items.map(item => ({ ...item, source: provider.id }));
-                    return result;
-                }),
-            options: options,
-            source: provider.id,
-            uri: uri
-        };
+        return provider.provideTimeline(uri, options)
+            .then(result => {
+                if (!result) {
+                    return undefined;
+                }
+                result.items = result.items.map(item => ({ ...item, source: provider.id }));
+                return result;
+            });
     }
 }

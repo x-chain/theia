@@ -111,21 +111,18 @@ export class TimelineTreeWidget extends TreeWidget {
         let timeline = this.timelinesBySource.get(source);
         const cursor = timeline?.cursor;
         const options = { cursor: reset ? undefined : cursor, limit: TimelineTreeWidget.PAGE_SIZE };
-        const timelineRequest = this.timelineService.getTimeline(source, uri, options);
-        if (timelineRequest) {
-            const timelineResult = await timelineRequest.result;
-            if (timelineResult) {
-                const items = timelineResult.items;
-                if (items) {
-                    if (timeline) {
-                        timeline.add(items);
-                        timeline.cursor = timelineResult.paging?.cursor;
-                    } else {
-                        timeline = new TimelineAggregate(timelineResult);
-                    }
-                    this.timelinesBySource.set(source, timeline);
-                    this.model.renderTimeline(source, uri.toString(), timeline.items, !!timeline.cursor);
+        const timelineResult = await this.timelineService.getTimeline(source, uri, options);
+        if (timelineResult) {
+            const items = timelineResult.items;
+            if (items) {
+                if (timeline) {
+                    timeline.add(items);
+                    timeline.cursor = timelineResult.paging?.cursor;
+                } else {
+                    timeline = new TimelineAggregate(timelineResult);
                 }
+                this.timelinesBySource.set(source, timeline);
+                this.model.renderTimeline(source, uri.toString(), timeline.items, !!timeline.cursor);
             }
         }
     }
