@@ -42,7 +42,7 @@ export class TimelineTreeModel extends TreeModelImpl {
         iconClass: 'fa fa-refresh'
     };
 
-    renderTimeline(source: string, uri: string, items: TimelineItem[], loadMore: boolean): void {
+    updateTree(source: string, uri: string, items: TimelineItem[], loadMore: boolean): void {
         const root = {
             id: 'timeline-tree-root',
             parent: undefined,

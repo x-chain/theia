@@ -122,7 +122,7 @@ export class TimelineTreeWidget extends TreeWidget {
                     timeline = new TimelineAggregate(timelineResult);
                 }
                 this.timelinesBySource.set(source, timeline);
-                this.model.renderTimeline(source, uri.toString(), timeline.items, !!timeline.cursor);
+                this.model.updateTree(source, uri.toString(), timeline.items, !!timeline.cursor);
             }
         }
     }
