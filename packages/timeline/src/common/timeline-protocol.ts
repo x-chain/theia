@@ -28,7 +28,6 @@ export class TimelineItem {
     timestamp: number;
     label: string;
     id?: string;
-    iconUrl?: IconUrl;
     description?: string;
     detail?: string;
     command?: Command;
@@ -38,8 +37,6 @@ export class TimelineItem {
         this.timestamp = timestamp;
     }
 }
-
-type IconUrl = string | { light: string; dark: string; };
 
 export interface TimelineChangeEvent {
     id: string;
