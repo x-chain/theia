@@ -25,8 +25,9 @@ import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigato
 import { EXPLORER_VIEW_CONTAINER_ID } from '@theia/navigator/lib/browser';
 import { TimelineWidget } from './timeline-widget';
 import { TimelineService } from './timeline-service';
-import { CommandRegistry } from '@theia/core/lib/common';
+import { Command, CommandRegistry } from '@theia/core/lib/common';
 import { TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 
 @injectable()
 export class TimelineContribution implements FrontendApplicationContribution {
@@ -41,6 +42,14 @@ export class TimelineContribution implements FrontendApplicationContribution {
     protected readonly commandRegistry: CommandRegistry;
     @inject(TabBarToolbarRegistry)
     protected readonly tabBarToolbar: TabBarToolbarRegistry;
+    @inject(EditorManager)
+    protected readonly editorManager: EditorManager;
+
+    public static readonly LOAD_MORE_COMMAND: Command = {
+        id: 'timeline-load-more',
+        label: 'Refresh',
+        iconClass: 'fa fa-refresh'
+    };
 
     async onDidInitializeLayout?(app: FrontendApplication): Promise<void> {
         const explorer = await this.widgetManager.getWidget(EXPLORER_VIEW_CONTAINER_ID);
@@ -69,6 +78,17 @@ export class TimelineContribution implements FrontendApplicationContribution {
             }),
             isEnabled: widget => this.checkWidget(widget, () => true),
             isVisible: widget => this.checkWidget(widget, () => true)
+        });
+        this.commandRegistry.registerCommand(TimelineContribution.LOAD_MORE_COMMAND, {
+            execute: () => {
+                const current = this.editorManager.currentEditor;
+                if (current instanceof EditorWidget) {
+                    const uri = current.getResourceUri();
+                    if (uri) {
+                        timeline.loadTimeline(uri, false);
+                    }
+                }
+            }
         });
         this.tabBarToolbar.registerItem(toolbarItem);
     }

@@ -21,7 +21,8 @@ import {
     TreeModelImpl,
 } from '@theia/core/lib/browser/tree';
 import { Command } from '@theia/core/lib/common';
-import { TimelineItem } from '../common/timeline-protocol';
+import { Timeline, TimelineItem } from '../common/timeline-protocol';
+import { TimelineContribution } from './timeline-contribution';
 
 export interface TimelineNode extends SelectableTreeNode {
     source: string;
@@ -34,13 +35,34 @@ export interface TimelineNode extends SelectableTreeNode {
     contextValue: string | undefined;
 }
 
+export class TimelineAggregate {
+    readonly items: TimelineItem[];
+    readonly source: string;
+    readonly uri: string;
+
+    private _cursor?: string;
+    get cursor(): string | undefined {
+        return this._cursor;
+    }
+
+    set cursor(cursor: string | undefined) {
+        this._cursor = cursor;
+    }
+
+    constructor(timeline: Timeline) {
+        this.source = timeline.source;
+        this.items = timeline.items;
+        this._cursor = timeline.paging?.cursor;
+    }
+
+    add(items: TimelineItem[]): void {
+        this.items.push(...items);
+        this.items.sort((a, b) => b.timestamp - a.timestamp);
+    }
+}
+
 @injectable()
 export class TimelineTreeModel extends TreeModelImpl {
-    public static readonly LOAD_MORE_COMMAND: Command = {
-        id: 'timeline-load-more',
-        label: 'Refresh',
-        iconClass: 'fa fa-refresh'
-    };
 
     updateTree(source: string, uri: string, items: TimelineItem[], loadMore: boolean): void {
         const root = {
@@ -76,7 +98,7 @@ export class TimelineTreeModel extends TreeModelImpl {
                 name: 'Load-more',
                 description: '',
                 detail: undefined,
-                command: TimelineTreeModel.LOAD_MORE_COMMAND,
+                command: TimelineContribution.LOAD_MORE_COMMAND,
                 commandArgs: [],
                 contextValue: undefined,
                 selected: true

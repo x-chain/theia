@@ -36,12 +36,16 @@ import { TimelineEmptyWidget } from './timeline-empty-widget';
 import { toArray } from '@phosphor/algorithm';
 import URI from '@theia/core/lib/common/uri';
 import { EditorPreviewWidget } from '@theia/editor-preview/lib/browser';
+import { TimelineProvidersChangeEvent } from '../common/timeline-protocol';
+import { TimelineAggregate } from './timeline-tree-model';
 
 @injectable()
 export class TimelineWidget extends BaseWidget {
 
     protected panel: Panel;
     static ID = 'timeline-view';
+
+    private readonly timelinesBySource = new Map<string, TimelineAggregate>();
 
     @inject(TimelineTreeWidget) protected readonly resourceWidget: TimelineTreeWidget;
     @inject(TimelineService) protected readonly timelineService: TimelineService;
@@ -73,11 +77,11 @@ export class TimelineWidget extends BaseWidget {
         this.toDispose.push(this.timelineService.onDidChangeTimeline(event => {
                 const current = this.editorManager.currentEditor;
                 if (NavigatableWidget.is(current) && event.uri && event.uri === current.getResourceUri()?.toString()) {
-                    this.resourceWidget.loadTimeline(new URI(event.uri), event.reset);
+                    this.loadTimeline(new URI(event.uri), event.reset);
                 } else {
                     const uri = this.editorManager.currentEditor?.getResourceUri();
                     if (uri) {
-                        this.resourceWidget.loadTimeline(uri, event.reset);
+                        this.loadTimeline(uri, event.reset);
                     }
                 }
             })
@@ -88,7 +92,7 @@ export class TimelineWidget extends BaseWidget {
                 if (uri) {
                     this.timelineEmptyWidget.hide();
                     this.resourceWidget.show();
-                    this.resourceWidget.loadTimeline(uri, true);
+                    this.loadTimeline(uri, true);
                 }
                 return;
             }
@@ -104,6 +108,53 @@ export class TimelineWidget extends BaseWidget {
                 this.timelineEmptyWidget.show();
             }
         }));
+        this.toDispose.push(this.timelineService.onDidChangeProviders(e => this.onProvidersChanged(e)));
+    }
+
+    private onProvidersChanged(event: TimelineProvidersChangeEvent): void {
+        const currentUri = this.editorManager.currentEditor?.getResourceUri();
+        if (event.removed) {
+            for (const source of event.removed) {
+                this.timelinesBySource.delete(source);
+            }
+
+            if (currentUri) {
+                this.loadTimeline(currentUri, true);
+            }
+        } else if (event.added) {
+            if (currentUri) {
+                event.added.forEach( source => this.loadTimelineForSource(source, currentUri, true));
+            }
+        }
+    }
+
+    async loadTimelineForSource(source: string, uri: URI, reset: boolean): Promise<void> {
+        if (reset) {
+            this.timelinesBySource.delete(source);
+        }
+        let timeline = this.timelinesBySource.get(source);
+        const cursor = timeline?.cursor;
+        const options = { cursor: reset ? undefined : cursor, limit: TimelineTreeWidget.PAGE_SIZE };
+        const timelineResult = await this.timelineService.getTimeline(source, uri, options);
+        if (timelineResult) {
+            const items = timelineResult.items;
+            if (items) {
+                if (timeline) {
+                    timeline.add(items);
+                    timeline.cursor = timelineResult.paging?.cursor;
+                } else {
+                    timeline = new TimelineAggregate(timelineResult);
+                }
+                this.timelinesBySource.set(source, timeline);
+                this.resourceWidget.model.updateTree(source, uri.toString(), timeline.items, !!timeline.cursor);
+            }
+        }
+    }
+
+    async loadTimeline(uri: URI, reset: boolean): Promise<void> {
+        for (const source of this.timelineService.getSources().map(s => s.id)) {
+            this.loadTimelineForSource(source, uri, reset);
+        }
     }
 
     refreshList(): void {
@@ -112,7 +163,7 @@ export class TimelineWidget extends BaseWidget {
         if (uri) {
             this.timelineEmptyWidget.hide();
             this.resourceWidget.show();
-            this.resourceWidget.loadTimeline(uri, true);
+            this.loadTimeline(uri, true);
         } else {
             this.timelineEmptyWidget.show();
             this.resourceWidget.hide();

@@ -18,12 +18,10 @@ import { injectable, inject } from 'inversify';
 import { Command, CommandRegistry, MenuModelRegistry, MenuPath } from '@theia/core/lib/common';
 import { TreeWidget, TreeProps, NodeProps, TREE_NODE_SEGMENT_GROW_CLASS } from '@theia/core/lib/browser/tree';
 import { ContextMenuRenderer } from '@theia/core/lib/browser';
-import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
-import { TimelineNode, TimelineTreeModel } from './timeline-tree-model';
+import { EditorManager } from '@theia/editor/lib/browser';
+import { TimelineAggregate, TimelineNode, TimelineTreeModel } from './timeline-tree-model';
 import { TimelineService } from './timeline-service';
 import { TimelineContextKeyService } from './timeline-context-key-service';
-import { Timeline, TimelineItem, TimelineProvidersChangeEvent } from '../common/timeline-protocol';
-import URI from '@theia/core/lib/common/uri';
 import * as React from 'react';
 
 export const TIMELINE_ITEM_CONTEXT_MENU: MenuPath = ['timeline-item-context-menu'];
@@ -50,35 +48,6 @@ export class TimelineTreeWidget extends TreeWidget {
         super(props, model, contextMenuRenderer);
         this.id = TimelineTreeWidget.ID;
         this.addClass('timeline-outer-container');
-        this.commandRegistry.registerCommand(TimelineTreeModel.LOAD_MORE_COMMAND, {
-            execute: () => {
-                const current = this.editorManager.currentEditor;
-                if (current instanceof EditorWidget) {
-                    const uri = current.getResourceUri();
-                    if (uri) {
-                        this.loadTimeline(uri, false);
-                    }
-                }
-            }
-        });
-        this.timelineService.onDidChangeProviders(e => this.onProvidersChanged(e));
-    }
-
-    private onProvidersChanged(event: TimelineProvidersChangeEvent): void {
-        const currentUri = this.editorManager.currentEditor?.getResourceUri();
-        if (event.removed) {
-            for (const source of event.removed) {
-                this.timelinesBySource.delete(source);
-            }
-
-            if (currentUri) {
-                this.loadTimeline(currentUri, true);
-            }
-        } else if (event.added) {
-            if (currentUri) {
-                event.added.forEach( source => this.loadTimelineForSource(source, currentUri, true));
-            }
-        }
     }
 
     protected renderNode(node: TimelineNode, props: NodeProps): React.ReactNode {
@@ -97,60 +66,6 @@ export class TimelineTreeWidget extends TreeWidget {
             contextKeys={this.contextKeys}
             contextMenuRenderer={this.contextMenuRenderer}/>;
         return React.createElement('div', attributes, content);
-    }
-    async loadTimeline(uri: URI, reset: boolean): Promise<void> {
-        for (const source of this.timelineService.getSources().map(s => s.id)) {
-            this.loadTimelineForSource(source, uri, reset);
-        }
-    }
-
-    async loadTimelineForSource(source: string, uri: URI, reset: boolean): Promise<void> {
-        if (reset) {
-            this.timelinesBySource.delete(source);
-        }
-        let timeline = this.timelinesBySource.get(source);
-        const cursor = timeline?.cursor;
-        const options = { cursor: reset ? undefined : cursor, limit: TimelineTreeWidget.PAGE_SIZE };
-        const timelineResult = await this.timelineService.getTimeline(source, uri, options);
-        if (timelineResult) {
-            const items = timelineResult.items;
-            if (items) {
-                if (timeline) {
-                    timeline.add(items);
-                    timeline.cursor = timelineResult.paging?.cursor;
-                } else {
-                    timeline = new TimelineAggregate(timelineResult);
-                }
-                this.timelinesBySource.set(source, timeline);
-                this.model.updateTree(source, uri.toString(), timeline.items, !!timeline.cursor);
-            }
-        }
-    }
-}
-
-class TimelineAggregate {
-    readonly items: TimelineItem[];
-    readonly source: string;
-    readonly uri: string;
-
-    private _cursor?: string;
-    get cursor(): string | undefined {
-        return this._cursor;
-    }
-
-    set cursor(cursor: string | undefined) {
-        this._cursor = cursor;
-    }
-
-    constructor(timeline: Timeline) {
-        this.source = timeline.source;
-        this.items = timeline.items;
-        this._cursor = timeline.paging?.cursor;
-    }
-
-    add(items: TimelineItem[]): void {
-        this.items.push(...items);
-        this.items.sort((a, b) => b.timestamp - a.timestamp);
     }
 }
 
