@@ -146,7 +146,7 @@ export class TimelineWidget extends BaseWidget {
                     timeline = new TimelineAggregate(timelineResult);
                 }
                 this.timelinesBySource.set(source, timeline);
-                this.resourceWidget.model.updateTree(source, uri.toString(), timeline.items, !!timeline.cursor);
+                this.resourceWidget.model.updateTree(timeline.items, !!timeline.cursor);
             }
         }
     }

@@ -680,6 +680,18 @@ export interface ScmExt {
     $setSourceControlSelection(sourceControlHandle: number, selected: boolean): Promise<void>;
 }
 
+export namespace TimelineCommandArg {
+    export function is(arg: Object | undefined): arg is TimelineCommandArg {
+        return !!arg && typeof arg === 'object' && 'timelineHandle' in arg;
+    }
+}
+export interface TimelineCommandArg {
+    timelineHandle: string;
+    source: string;
+    uri: string;
+    isSingleUri: boolean;
+}
+
 export interface DecorationsExt {
     registerDecorationProvider(provider: theia.DecorationProvider): theia.Disposable
     $provideDecoration(id: number, uri: string): Promise<DecorationData | undefined>

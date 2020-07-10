@@ -24,6 +24,8 @@ import { Command, Disposable, Event } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 
 export class TimelineItem {
+    source: string;
+    uri: string;
     handle: string;
     timestamp: number;
     label: string;

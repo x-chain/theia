@@ -20,61 +20,40 @@ import {
     SelectableTreeNode,
     TreeModelImpl,
 } from '@theia/core/lib/browser/tree';
-import { Command } from '@theia/core/lib/common';
 import { TimelineItem } from '../common/timeline-protocol';
 import { TimelineContribution } from './timeline-contribution';
 
 export interface TimelineNode extends SelectableTreeNode {
-    source: string;
-    uri: string;
-    description: string | undefined;
-    detail: string | undefined;
-    command: Command | undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    commandArgs: any[];
-    contextValue: string | undefined;
+    timelineItem: TimelineItem;
 }
 
 @injectable()
 export class TimelineTreeModel extends TreeModelImpl {
 
-    updateTree(source: string, uri: string, items: TimelineItem[], loadMore: boolean): void {
+    updateTree(items: TimelineItem[], loadMore: boolean): void {
         const root = {
             id: 'timeline-tree-root',
             parent: undefined,
             visible: false,
             children: []
         } as CompositeTreeNode;
-        const children = items.map(item => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const command: any = item.command;
-            return {
-                source,
-                uri,
+        const children = items.map(item =>
+             ({
+                timelineItem: item,
                 id: item.id ? item.id : item.timestamp.toString(),
                 parent: root,
-                name: item.label,
-                command: command,
-                commandArgs: command.arguments,
-                description: item.description,
                 detail: item.detail,
-                contextValue: item.contextValue,
                 selected: false,
                 visible: true
-            } as TimelineNode;
-        });
+            } as TimelineNode)
+        );
         if (loadMore) {
+            const loadMoreNode = new TimelineItem('Load-more', 0);
+            loadMoreNode.command = TimelineContribution.LOAD_MORE_COMMAND;
             children.push({
-                source: source,
-                uri,
+                timelineItem: loadMoreNode,
                 id: 'load-more',
                 parent: root,
-                name: 'Load-more',
-                description: '',
-                detail: undefined,
-                command: TimelineContribution.LOAD_MORE_COMMAND,
-                commandArgs: [],
-                contextValue: undefined,
                 selected: true
             });
         }

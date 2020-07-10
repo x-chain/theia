@@ -13,7 +13,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
-import { Plugin, TimelineExt, TimelineMain } from '../common';
+import { Plugin, TimelineCommandArg, TimelineExt, TimelineMain } from '../common';
 import { RPCProtocol } from '../common/rpc-protocol';
 import { Disposable, ThemeIcon } from './types-impl';
 import { PLUGIN_RPC_CONTEXT } from '../common';
@@ -43,12 +43,14 @@ export class TimelineExtImpl implements TimelineExt {
 
         commands.registerArgumentProcessor({
             processArgument: arg => {
-                if (arg && arg.id === 11) {
-                    return this.itemsBySourceAndUriMap.get(arg.source)?.get(arg.uri?.toString())?.get(arg.handle);
-                } else if (arg && arg.id === 12) {
-                    return URI.parse(arg.uri ? arg.uri : '');
+                if (!TimelineCommandArg.is(arg)) {
+                    return arg;
                 }
-                return arg;
+                if (arg.isSingleUri) {
+                    return URI.parse(arg.uri);
+                } else {
+                    return this.itemsBySourceAndUriMap.get(arg.source)?.get(arg.uri?.toString())?.get(arg.timelineHandle);
+                }
             }
         });
     }
@@ -89,6 +91,8 @@ export class TimelineExtImpl implements TimelineExt {
                     }
                     const toDispose = new DisposableCollection();
                     return {
+                        source: id,
+                        uri,
                         id: item.id,
                         label: item.label,
                         description: item.description,

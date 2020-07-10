@@ -15,14 +15,15 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { Command, CommandRegistry, MenuModelRegistry, MenuPath } from '@theia/core/lib/common';
+import { CommandRegistry, MenuModelRegistry, MenuPath } from '@theia/core/lib/common';
 import { TreeWidget, TreeProps, NodeProps, TREE_NODE_SEGMENT_GROW_CLASS } from '@theia/core/lib/browser/tree';
 import { ContextMenuRenderer } from '@theia/core/lib/browser';
 import { EditorManager } from '@theia/editor/lib/browser';
 import { TimelineNode, TimelineTreeModel } from './timeline-tree-model';
-import { TimelineAggregate, TimelineService } from './timeline-service';
+import { TimelineService } from './timeline-service';
 import { TimelineContextKeyService } from './timeline-context-key-service';
 import * as React from 'react';
+import { TimelineItem } from '../common/timeline-protocol';
 
 export const TIMELINE_ITEM_CONTEXT_MENU: MenuPath = ['timeline-item-context-menu'];
 
@@ -31,8 +32,6 @@ export class TimelineTreeWidget extends TreeWidget {
 
     static ID = 'timeline-resource-widget';
     static PAGE_SIZE = 20;
-
-    private readonly timelinesBySource = new Map<string, TimelineAggregate>();
 
     @inject(EditorManager) protected readonly editorManager: EditorManager;
     @inject(MenuModelRegistry) protected readonly menus: MenuModelRegistry;
@@ -53,16 +52,8 @@ export class TimelineTreeWidget extends TreeWidget {
     protected renderNode(node: TimelineNode, props: NodeProps): React.ReactNode {
         const attributes = this.createNodeAttributes(node, props);
         const content = <TimelineItemNode
-            handle={this.timelinesBySource.get(node.source)?.items.find(i => i.id === node.id)?.handle}
-            source={node.source}
-            name={node.name}
-            uri={node.uri}
-            label={node.description}
-            title={node.detail}
-            command={node.command}
-            commandArgs={node.commandArgs}
+            timelineItem={node.timelineItem}
             commandRegistry={this.commandRegistry}
-            contextValue={node.contextValue}
             contextKeys={this.contextKeys}
             contextMenuRenderer={this.contextMenuRenderer}/>;
         return React.createElement('div', attributes, content);
@@ -71,17 +62,8 @@ export class TimelineTreeWidget extends TreeWidget {
 
 export namespace TimelineItemNode {
     export interface Props {
-        source: string;
-        uri: string;
-        handle?: string;
-        name?: string;
-        label?: string;
-        title?: string;
-        command?: Command;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        commandArgs: any[];
+        timelineItem: TimelineItem;
         commandRegistry: CommandRegistry;
-        contextValue?: string;
         contextKeys: TimelineContextKeyService;
         contextMenuRenderer: ContextMenuRenderer;
     }
@@ -89,35 +71,36 @@ export namespace TimelineItemNode {
 
 export class TimelineItemNode extends React.Component<TimelineItemNode.Props> {
     render(): JSX.Element | undefined {
-        const { name, label, title } = this.props;
+        const { label, description, detail } = this.props.timelineItem;
         return <div className='timeline-item'
-                    title={title}
+                    title={detail}
                     onContextMenu={this.renderContextMenu}
                     onClick={this.open}>
             <div className={`noWrapInfo ${TREE_NODE_SEGMENT_GROW_CLASS}`} >
-                <span className='name'>{name}</span>
-                <span className='label'>{label}</span>
+                <span className='name'>{label}</span>
+                <span className='label'>{description}</span>
             </div>
         </div>;
     }
 
     protected open = () => {
-        const command: Command | undefined = this.props.command;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const command: any = this.props.timelineItem.command;
         if (command) {
-            this.props.commandRegistry.executeCommand(command.id, ...this.props.commandArgs);
+            this.props.commandRegistry.executeCommand(command.id, ...command.arguments ? command.arguments : []);
         }
     };
 
     protected renderContextMenu = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
-        const { source, uri, handle, contextValue, contextKeys, contextMenuRenderer } = this.props;
+        const { timelineItem, contextKeys, contextMenuRenderer } = this.props;
         const currentTimelineItem = contextKeys.timelineItem.get();
-        contextKeys.timelineItem.set(contextValue);
+        contextKeys.timelineItem.set(timelineItem.contextValue);
         try {
             contextMenuRenderer.render({
                 menuPath: TIMELINE_ITEM_CONTEXT_MENU,
                 anchor: event.nativeEvent,
-                args: [{ id: 11, source, uri, handle }, { id: 12, uri}, source]
+                args: [timelineItem]
             });
         } finally {
             contextKeys.timelineItem.set(currentTimelineItem);
