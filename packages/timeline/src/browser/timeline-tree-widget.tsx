@@ -87,10 +87,7 @@ export namespace TimelineItemNode {
     }
 }
 
-export class TimelineItemNode<P extends TimelineItemNode.Props> extends React.Component<P> {
-    constructor(props: P) {
-        super(props);
-    }
+export class TimelineItemNode extends React.Component<TimelineItemNode.Props> {
     render(): JSX.Element | undefined {
         const { name, label, title } = this.props;
         return <div className='timelineItem'
