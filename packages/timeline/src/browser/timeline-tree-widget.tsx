@@ -90,7 +90,7 @@ export namespace TimelineItemNode {
 export class TimelineItemNode extends React.Component<TimelineItemNode.Props> {
     render(): JSX.Element | undefined {
         const { name, label, title } = this.props;
-        return <div className='timelineItem'
+        return <div className='timeline-item'
                     title={title}
                     onContextMenu={this.renderContextMenu}
                     onClick={this.open}>
