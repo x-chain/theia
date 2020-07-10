@@ -37,7 +37,7 @@ import { toArray } from '@phosphor/algorithm';
 import URI from '@theia/core/lib/common/uri';
 import { EditorPreviewWidget } from '@theia/editor-preview/lib/browser';
 import { TimelineProvidersChangeEvent } from '../common/timeline-protocol';
-import { TimelineAggregate } from './timeline-tree-model';
+import { TimelineAggregate } from './timeline-service';
 
 @injectable()
 export class TimelineWidget extends BaseWidget {

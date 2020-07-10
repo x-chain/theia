@@ -19,7 +19,7 @@ import { Disposable, Emitter, Event } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 import {
     Timeline,
-    TimelineChangeEvent, TimelineOptions,
+    TimelineChangeEvent, TimelineItem, TimelineOptions,
     TimelineProvider,
     TimelineProvidersChangeEvent,
     TimelineSource
@@ -95,5 +95,31 @@ export class TimelineService {
                 result.items = result.items.map(item => ({ ...item, source: provider.id }));
                 return result;
             });
+    }
+}
+
+export class TimelineAggregate {
+    readonly items: TimelineItem[];
+    readonly source: string;
+    readonly uri: string;
+
+    private _cursor?: string;
+    get cursor(): string | undefined {
+        return this._cursor;
+    }
+
+    set cursor(cursor: string | undefined) {
+        this._cursor = cursor;
+    }
+
+    constructor(timeline: Timeline) {
+        this.source = timeline.source;
+        this.items = timeline.items;
+        this._cursor = timeline.paging?.cursor;
+    }
+
+    add(items: TimelineItem[]): void {
+        this.items.push(...items);
+        this.items.sort((a, b) => b.timestamp - a.timestamp);
     }
 }

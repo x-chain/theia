@@ -19,8 +19,8 @@ import { Command, CommandRegistry, MenuModelRegistry, MenuPath } from '@theia/co
 import { TreeWidget, TreeProps, NodeProps, TREE_NODE_SEGMENT_GROW_CLASS } from '@theia/core/lib/browser/tree';
 import { ContextMenuRenderer } from '@theia/core/lib/browser';
 import { EditorManager } from '@theia/editor/lib/browser';
-import { TimelineAggregate, TimelineNode, TimelineTreeModel } from './timeline-tree-model';
-import { TimelineService } from './timeline-service';
+import { TimelineNode, TimelineTreeModel } from './timeline-tree-model';
+import { TimelineAggregate, TimelineService } from './timeline-service';
 import { TimelineContextKeyService } from './timeline-context-key-service';
 import * as React from 'react';
 

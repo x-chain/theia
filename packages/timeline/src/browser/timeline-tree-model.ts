@@ -21,7 +21,7 @@ import {
     TreeModelImpl,
 } from '@theia/core/lib/browser/tree';
 import { Command } from '@theia/core/lib/common';
-import { Timeline, TimelineItem } from '../common/timeline-protocol';
+import { TimelineItem } from '../common/timeline-protocol';
 import { TimelineContribution } from './timeline-contribution';
 
 export interface TimelineNode extends SelectableTreeNode {
@@ -33,32 +33,6 @@ export interface TimelineNode extends SelectableTreeNode {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     commandArgs: any[];
     contextValue: string | undefined;
-}
-
-export class TimelineAggregate {
-    readonly items: TimelineItem[];
-    readonly source: string;
-    readonly uri: string;
-
-    private _cursor?: string;
-    get cursor(): string | undefined {
-        return this._cursor;
-    }
-
-    set cursor(cursor: string | undefined) {
-        this._cursor = cursor;
-    }
-
-    constructor(timeline: Timeline) {
-        this.source = timeline.source;
-        this.items = timeline.items;
-        this._cursor = timeline.paging?.cursor;
-    }
-
-    add(items: TimelineItem[]): void {
-        this.items.push(...items);
-        this.items.sort((a, b) => b.timestamp - a.timestamp);
-    }
 }
 
 @injectable()
