@@ -26,7 +26,7 @@ export class TimelineEmptyWidget extends ReactWidget {
 
     constructor() {
         super();
-        this.addClass('theia-timline-empty');
+        this.addClass('theia-timeline-empty');
         this.id = TimelineEmptyWidget.ID;
     }
 
