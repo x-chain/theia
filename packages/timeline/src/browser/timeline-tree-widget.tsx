@@ -30,7 +30,7 @@ export const TIMELINE_ITEM_CONTEXT_MENU: MenuPath = ['timeline-item-context-menu
 @injectable()
 export class TimelineTreeWidget extends TreeWidget {
 
-    static ID = 'timeline-resource-widget';
+    static ID = 'timeline-tree-widget';
     static PAGE_SIZE = 20;
 
     @inject(EditorManager) protected readonly editorManager: EditorManager;
