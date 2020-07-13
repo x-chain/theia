@@ -93,6 +93,7 @@ export class TimelineItemNode extends React.Component<TimelineItemNode.Props> {
 
     protected renderContextMenu = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
+        event.stopPropagation();
         const { timelineItem, contextKeys, contextMenuRenderer } = this.props;
         const currentTimelineItem = contextKeys.timelineItem.get();
         contextKeys.timelineItem.set(timelineItem.contextValue);
