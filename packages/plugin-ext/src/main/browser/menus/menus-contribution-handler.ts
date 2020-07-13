@@ -42,7 +42,7 @@ import { WebviewWidget } from '../webview/webview';
 import { Navigatable } from '@theia/core/lib/browser/navigatable';
 import { ContextKeyService } from '@theia/core/lib/browser/context-key-service';
 import { TIMELINE_ITEM_CONTEXT_MENU } from '@theia/timeline/lib/browser/timeline-tree-widget';
-import { TimelineItem } from '@theia/timeline/lib/common/timeline-protocol';
+import { TimelineItem } from '@theia/timeline/lib/common/timeline-model';
 
 type CodeEditorWidget = EditorWidget | WebviewWidget;
 export namespace CodeEditorWidget {

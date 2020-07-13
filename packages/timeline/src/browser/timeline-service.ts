@@ -23,7 +23,7 @@ import {
     TimelineProvider,
     TimelineProvidersChangeEvent,
     TimelineSource
-} from '../common/timeline-protocol';
+} from '../common/timeline-model';
 
 @injectable()
 export class TimelineService {

@@ -23,7 +23,7 @@ import { URI } from 'vscode-uri';
 import { PluginIconPath } from './plugin-icon-path';
 import { CommandRegistryImpl } from './command-registry';
 import * as theia from '@theia/plugin';
-import { Timeline, TimelineItem, TimelineOptions } from '@theia/timeline/lib/common/timeline-protocol';
+import { Timeline, TimelineItem, TimelineOptions } from '@theia/timeline/lib/common/timeline-model';
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.

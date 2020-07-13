@@ -20,8 +20,8 @@ import { TimelineService } from '@theia/timeline/lib/browser/timeline-service';
 import { Emitter } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 import { MAIN_RPC_CONTEXT, TimelineExt } from '../../common/plugin-api-rpc';
-import { Timeline, TimelineOptions } from '@theia/timeline/lib/common/timeline-protocol';
-import { TimelineChangeEvent } from '@theia/timeline/lib/common/timeline-protocol';
+import { Timeline, TimelineOptions } from '@theia/timeline/lib/common/timeline-model';
+import { TimelineChangeEvent } from '@theia/timeline/lib/common/timeline-model';
 import { TimelineChangeEvent as PluginTimelineChangeEvent } from '../../common/plugin-api-rpc-model';
 
 /*---------------------------------------------------------------------------------------------

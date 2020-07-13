@@ -23,7 +23,7 @@ import { TimelineNode, TimelineTreeModel } from './timeline-tree-model';
 import { TimelineService } from './timeline-service';
 import { TimelineContextKeyService } from './timeline-context-key-service';
 import * as React from 'react';
-import { TimelineItem } from '../common/timeline-protocol';
+import { TimelineItem } from '../common/timeline-model';
 
 export const TIMELINE_ITEM_CONTEXT_MENU: MenuPath = ['timeline-item-context-menu'];
 

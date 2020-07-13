@@ -81,7 +81,7 @@ import { SymbolInformation } from 'vscode-languageserver-types';
 import { ArgumentProcessor } from '../plugin/command-registry';
 import { MaybePromise } from '@theia/core/lib/common/types';
 import { QuickTitleButton } from '@theia/core/lib/common/quick-open-model';
-import { Timeline } from '@theia/timeline/lib/common/timeline-protocol';
+import { Timeline } from '@theia/timeline/lib/common/timeline-model';
 
 export interface PreferenceData {
     [scope: number]: any;

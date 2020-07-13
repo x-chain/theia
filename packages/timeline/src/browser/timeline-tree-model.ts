@@ -20,7 +20,7 @@ import {
     SelectableTreeNode,
     TreeModelImpl,
 } from '@theia/core/lib/browser/tree';
-import { TimelineItem } from '../common/timeline-protocol';
+import { TimelineItem } from '../common/timeline-model';
 import { TimelineContribution } from './timeline-contribution';
 
 export interface TimelineNode extends SelectableTreeNode {
