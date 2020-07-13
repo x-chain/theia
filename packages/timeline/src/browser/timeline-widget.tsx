@@ -76,8 +76,8 @@ export class TimelineWidget extends BaseWidget {
         this.refreshList();
         this.toDispose.push(this.timelineService.onDidChangeTimeline(event => {
                 const current = this.editorManager.currentEditor;
-                if (NavigatableWidget.is(current) && event.uri && event.uri === current.getResourceUri()?.toString()) {
-                    this.loadTimeline(new URI(event.uri), event.reset);
+                if (NavigatableWidget.is(current) && event.uri && event.uri.toString() === current.getResourceUri()?.toString()) {
+                    this.loadTimeline(event.uri, event.reset);
                 } else {
                     const uri = this.editorManager.currentEditor?.getResourceUri();
                     if (uri) {

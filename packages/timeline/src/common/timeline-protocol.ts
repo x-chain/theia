@@ -42,7 +42,7 @@ export class TimelineItem {
 
 export interface TimelineChangeEvent {
     id: string;
-    uri: string | undefined;
+    uri: URI | undefined;
     reset: boolean
 }
 

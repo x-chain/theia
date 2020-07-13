@@ -20,7 +20,9 @@ import { TimelineService } from '@theia/timeline/lib/browser/timeline-service';
 import { Emitter } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
 import { MAIN_RPC_CONTEXT, TimelineExt } from '../../common/plugin-api-rpc';
-import { Timeline, TimelineChangeEvent, TimelineOptions } from '@theia/timeline/lib/common/timeline-protocol';
+import { Timeline, TimelineOptions } from '@theia/timeline/lib/common/timeline-protocol';
+import { TimelineChangeEvent } from '@theia/timeline/lib/common/timeline-protocol';
+import { TimelineChangeEvent as PluginTimelineChangeEvent } from '../../common/plugin-api-rpc-model';
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -64,11 +66,11 @@ export class TimelineMainImpl implements TimelineMain {
         });
     }
 
-    async $fireTimelineChanged(e: TimelineChangeEvent | undefined): Promise<void> {
+    async $fireTimelineChanged(e: PluginTimelineChangeEvent | undefined): Promise<void> {
         if (e) {
             const emitter = this.providerEmitters.get(e.id);
             if (emitter) {
-                emitter.fire(e);
+                emitter.fire({ uri: new URI(e.uri), reset: e.reset, id: e.id });
             }
         }
     }

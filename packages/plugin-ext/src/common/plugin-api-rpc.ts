@@ -69,7 +69,8 @@ import {
     CreateFilesEventDTO,
     RenameFilesEventDTO,
     DeleteFilesEventDTO,
-    SearchInWorkspaceResult
+    SearchInWorkspaceResult,
+    TimelineChangeEvent
 } from './plugin-api-rpc-model';
 import { ExtPluginApi } from './plugin-ext-api-contribution';
 import { KeysToAnyValues, KeysToKeysToAnyValue } from './types';
@@ -80,7 +81,7 @@ import { SymbolInformation } from 'vscode-languageserver-types';
 import { ArgumentProcessor } from '../plugin/command-registry';
 import { MaybePromise } from '@theia/core/lib/common/types';
 import { QuickTitleButton } from '@theia/core/lib/common/quick-open-model';
-import { Timeline, TimelineChangeEvent } from '@theia/timeline/lib/common/timeline-protocol';
+import { Timeline } from '@theia/timeline/lib/common/timeline-protocol';
 
 export interface PreferenceData {
     [scope: number]: any;
