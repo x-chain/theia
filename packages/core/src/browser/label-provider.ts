@@ -19,7 +19,7 @@ import * as fileIcons from 'file-icons-js';
 import URI from '../common/uri';
 import { ContributionProvider } from '../common/contribution-provider';
 import { Prioritizeable } from '../common/types';
-import { Event, Emitter } from '../common';
+import { Event, Emitter, Disposable, DisposableCollection, isWindows, OS, startsWithIgnoreCase } from '../common';
 import { FrontendApplicationContribution } from './frontend-application';
 
 /**
@@ -82,10 +82,49 @@ export interface LabelProviderContribution {
      */
     affects?(element: object, event: DidChangeLabelEvent): boolean;
 
+    getUriLabel?(element: object): string;
+
+    registerFormatter?(formatter: ResourceLabelFormatter): Disposable;
+
 }
 
 export interface DidChangeLabelEvent {
     affects(element: object): boolean;
+}
+
+// copied and modified from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/platform/label/common/label.ts#L31-L33
+/*---------------------------------------------------------------------------------------------
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
+export interface FormatterChangeEvent {
+    scheme: string;
+}
+
+// copied from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/platform/label/common/label.ts#L35-L40
+/*---------------------------------------------------------------------------------------------
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
+export interface ResourceLabelFormatter {
+    scheme: string;
+    authority?: string;
+    priority?: boolean;
+    formatting: ResourceLabelFormatting;
+}
+
+// copied from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/platform/label/common/label.ts#L42-L49
+/*---------------------------------------------------------------------------------------------
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
+export interface ResourceLabelFormatting {
+    label: string; // myLabel:/${path}
+    separator: '/' | '\\' | '';
+    tildify?: boolean;
+    normalizeDriveLetter?: boolean;
+    workspaceSuffix?: string;
+    authorityPrefix?: string;
 }
 
 export interface URIIconReference {
@@ -105,6 +144,9 @@ export namespace URIIconReference {
 
 @injectable()
 export class DefaultUriLabelProviderContribution implements LabelProviderContribution {
+
+    protected formatters: ResourceLabelFormatter[] = [];
+    protected readonly onDidChangeEmitter = new Emitter<DidChangeLabelEvent>();
 
     canHandle(element: object): number {
         if (element instanceof URI || URIIconReference.is(element)) {
@@ -153,6 +195,122 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
 
     protected getUri(element: URI | URIIconReference): URI | undefined {
         return URIIconReference.is(element) ? element.uri : element;
+    }
+
+    registerFormatter(formatter: ResourceLabelFormatter): Disposable {
+        this.formatters.push(formatter);
+        this.onDidChangeEmitter.fire({
+            affects: (element: URI) => this.canHandle(element) === 1
+        });
+        return Disposable.create(() => {
+            this.formatters = this.formatters.filter(f => f !== formatter);
+            this.onDidChangeEmitter.fire({
+                affects: (element: URI) => this.canHandle(element) === 1
+            });
+        });
+    }
+
+    getUriLabel?(uri: URI): string {
+        const formatting = this.findFormatting(uri);
+        if (!formatting) {
+            return uri.path.toString();
+        }
+        return this.formatUri(uri, formatting);
+    }
+
+    get onDidChange(): Event<DidChangeLabelEvent> {
+        return this.onDidChangeEmitter.event;
+    }
+
+    // copied and modified from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/workbench/services/label/common/labelService.ts#L240-L274
+    /*---------------------------------------------------------------------------------------------
+    *  Copyright (c) Microsoft Corporation. All rights reserved.
+    *  Licensed under the MIT License. See License.txt in the project root for license information.
+    *--------------------------------------------------------------------------------------------*/
+    private readonly labelMatchingRegexp = /\${(scheme|authority|path|query)}/g;
+    private formatUri(resource: URI, formatting: ResourceLabelFormatting): string {
+        // const labelMatchingRegexp = /\${(scheme|authority|path|query)}/g;
+        let label = formatting.label.replace(this.labelMatchingRegexp, (match, token) => {
+            switch (token) {
+                case 'scheme': return resource.scheme;
+                case 'authority': return resource.authority;
+                case 'path': return resource.path.toString();
+                case 'query': return resource.query;
+                default: return '';
+            }
+        });
+
+        // convert \c:\something => C:\something
+        if (formatting.normalizeDriveLetter && this.hasDriveLetter(label)) {
+            label = label.charAt(1).toUpperCase() + label.substr(2);
+        }
+
+        if (formatting.tildify) {
+            const homePath = process.env.HOMEPATH;
+            label = this.tildify(label, homePath ? homePath : '');
+        }
+        if (formatting.authorityPrefix && resource.authority) {
+            label = formatting.authorityPrefix + label;
+        }
+
+        return label.replace(/\//g, formatting.separator);
+    }
+
+    // copied and modified from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/workbench/services/label/common/labelService.ts#L72-L74
+    /*---------------------------------------------------------------------------------------------
+    *  Copyright (c) Microsoft Corporation. All rights reserved.
+    *  Licensed under the MIT License. See License.txt in the project root for license information.
+    *--------------------------------------------------------------------------------------------*/
+    private hasDriveLetter(path: string): boolean {
+        return !!(path && path[2] === ':');
+    }
+
+    // copied and modified from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/base/common/labels.ts#L107-L125
+    /*---------------------------------------------------------------------------------------------
+    *  Copyright (c) Microsoft Corporation. All rights reserved.
+    *  Licensed under the MIT License. See License.txt in the project root for license information.
+    *--------------------------------------------------------------------------------------------*/
+    private tildify(path: string, userHome: string): string {
+        if (isWindows || !path || !userHome) {
+            return path; // unsupported
+        }
+        const normalizedUserHome = new URI(userHome).normalizePath().toString();
+
+        // Linux: case sensitive, macOS: case insensitive
+        if (OS.type() === OS.Type.Linux ? path.startsWith(normalizedUserHome) : startsWithIgnoreCase(path, normalizedUserHome)) {
+            path = `~/${path.substr(normalizedUserHome.length)}`;
+        }
+
+        return path;
+    }
+
+    // copied and modified from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/workbench/services/label/common/labelService.ts#L108-L128
+    /*---------------------------------------------------------------------------------------------
+    *  Copyright (c) Microsoft Corporation. All rights reserved.
+    *  Licensed under the MIT License. See License.txt in the project root for license information.
+    *--------------------------------------------------------------------------------------------*/
+    private findFormatting(resource: URI): ResourceLabelFormatting | undefined {
+        let bestResult: ResourceLabelFormatter | undefined;
+
+        this.formatters.forEach(formatter => {
+            if (formatter.scheme === resource.scheme) {
+                if (!bestResult && !formatter.authority) {
+                    bestResult = formatter;
+                    return;
+                }
+                if (!formatter.authority) {
+                    return;
+                }
+
+                if ((formatter.authority.toLowerCase() === resource.authority.toLowerCase()) &&
+                    (!bestResult || !bestResult.authority || formatter.authority.length > bestResult.authority.length ||
+                        ((formatter.authority.length === bestResult.authority.length) && formatter.priority))) {
+                    bestResult = formatter;
+                }
+            }
+        });
+
+        return bestResult ? bestResult.formatting : undefined;
     }
 }
 
@@ -242,6 +400,29 @@ export class LabelProvider implements FrontendApplicationContribution {
         const contributions = this.findContribution(element);
         for (const contribution of contributions) {
             const value = contribution.getLongName && contribution.getLongName(element);
+            if (value === undefined) {
+                continue;
+            }
+            return value;
+        }
+        return '';
+    }
+
+    registerFormatter(formatter: ResourceLabelFormatter): Disposable {
+        const disposables: DisposableCollection = new DisposableCollection();
+        const contributions = this.findContribution(new URI().withScheme(formatter.scheme));
+        for (const contribution of contributions) {
+            if (contribution.registerFormatter) {
+                disposables.push(contribution.registerFormatter(formatter));
+            }
+        }
+        return disposables;
+    }
+
+    getUriLabel(element: object): string {
+        const contributions = this.findContribution(element);
+        for (const contribution of contributions) {
+            const value = contribution.getUriLabel && contribution.getUriLabel(element);
             if (value === undefined) {
                 continue;
             }

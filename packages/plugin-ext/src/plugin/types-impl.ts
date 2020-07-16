@@ -27,7 +27,7 @@ import * as theia from '@theia/plugin';
 import * as crypto from 'crypto';
 import { URI } from 'vscode-uri';
 import { relative } from '../common/paths-util';
-import { startsWithIgnoreCase } from '@theia/languages/lib/common/language-selector/strings';
+// import { startsWithIgnoreCase } from '@theia/core/lib/common/strings';
 import { MarkdownString, isMarkdownString } from './markdown-string';
 import { SymbolKind } from '../common/plugin-api-rpc-model';
 
@@ -979,7 +979,8 @@ export class CodeActionKind {
     }
 
     public contains(other: CodeActionKind): boolean {
-        return this.value === other.value || startsWithIgnoreCase(other.value, this.value + CodeActionKind.sep);
+        // return this.value === other.value || startsWithIgnoreCase(other.value, this.value + CodeActionKind.sep);
+        return true;
     }
 
     public intersects(other: CodeActionKind): boolean {

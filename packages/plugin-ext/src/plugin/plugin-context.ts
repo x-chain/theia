@@ -143,13 +143,14 @@ import { ConnectionExtImpl } from './connection-ext';
 import { TasksExtImpl } from './tasks/tasks';
 import { DebugExtImpl } from './node/debug/debug';
 import { FileSystemExtImpl } from './file-system';
-import { QuickPick, QuickPickItem } from '@theia/plugin';
+import { QuickPick, QuickPickItem, ResourceLabelFormatter } from '@theia/plugin';
 import { ScmExtImpl } from './scm';
 import { DecorationProvider, LineChange } from '@theia/plugin';
 import { DecorationsExtImpl } from './decorations';
 import { TextEditorExt } from './text-editor';
 import { ClipboardExt } from './clipboard-ext';
 import { WebviewsExtImpl } from './webviews';
+import { LabelServiceExtImpl } from '../plugin/label-service';
 
 export function createAPIFactory(
     rpc: RPCProtocol,
@@ -182,6 +183,7 @@ export function createAPIFactory(
     const fileSystemExt = rpc.set(MAIN_RPC_CONTEXT.FILE_SYSTEM_EXT, new FileSystemExtImpl(rpc));
     const scmExt = rpc.set(MAIN_RPC_CONTEXT.SCM_EXT, new ScmExtImpl(rpc, commandRegistry));
     const decorationsExt = rpc.set(MAIN_RPC_CONTEXT.DECORATIONS_EXT, new DecorationsExtImpl(rpc));
+    const labelServiceExt = rpc.set(MAIN_RPC_CONTEXT.LABEL_SERVICE_EXT, new LabelServiceExtImpl(rpc));
     rpc.set(MAIN_RPC_CONTEXT.DEBUG_EXT, debugExt);
 
     return function (plugin: InternalPlugin): typeof theia {
@@ -505,6 +507,9 @@ export function createAPIFactory(
             registerTaskProvider(type: string, provider: theia.TaskProvider): theia.Disposable {
                 return tasks.registerTaskProvider(type, provider);
             },
+            registerResourceLabelFormatter(formatter: ResourceLabelFormatter): theia.Disposable {
+                return labelServiceExt.$registerResourceLabelFormatter(formatter);
+            }
         };
 
         const onDidChangeLogLevel = new Emitter<theia.LogLevel>();
