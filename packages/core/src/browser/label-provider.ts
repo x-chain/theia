@@ -82,8 +82,6 @@ export interface LabelProviderContribution {
      */
     affects?(element: object, event: DidChangeLabelEvent): boolean;
 
-    getUriLabel?(element: object): string;
-
     registerFormatter?(formatter: ResourceLabelFormatter): Disposable;
 
 }
@@ -190,6 +188,12 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
 
     getLongName(element: URI | URIIconReference): string | undefined {
         const uri = this.getUri(element);
+        if (uri) {
+            const formatting = this.findFormatting(uri);
+            if (formatting) {
+                return this.formatUri(uri, formatting);
+            }
+        }
         return uri && uri.path.toString();
     }
 
@@ -210,14 +214,6 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
         });
     }
 
-    getUriLabel?(uri: URI): string {
-        const formatting = this.findFormatting(uri);
-        if (!formatting) {
-            return uri.path.toString();
-        }
-        return this.formatUri(uri, formatting);
-    }
-
     get onDidChange(): Event<DidChangeLabelEvent> {
         return this.onDidChangeEmitter.event;
     }
@@ -228,8 +224,7 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
     *  Licensed under the MIT License. See License.txt in the project root for license information.
     *--------------------------------------------------------------------------------------------*/
     private readonly labelMatchingRegexp = /\${(scheme|authority|path|query)}/g;
-    private formatUri(resource: URI, formatting: ResourceLabelFormatting): string {
-        // const labelMatchingRegexp = /\${(scheme|authority|path|query)}/g;
+    formatUri(resource: URI, formatting: ResourceLabelFormatting): string {
         let label = formatting.label.replace(this.labelMatchingRegexp, (match, token) => {
             switch (token) {
                 case 'scheme': return resource.scheme;
@@ -289,7 +284,7 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
     *  Copyright (c) Microsoft Corporation. All rights reserved.
     *  Licensed under the MIT License. See License.txt in the project root for license information.
     *--------------------------------------------------------------------------------------------*/
-    private findFormatting(resource: URI): ResourceLabelFormatting | undefined {
+    findFormatting(resource: URI): ResourceLabelFormatting | undefined {
         let bestResult: ResourceLabelFormatter | undefined;
 
         this.formatters.forEach(formatter => {
@@ -417,18 +412,6 @@ export class LabelProvider implements FrontendApplicationContribution {
             }
         }
         return disposables;
-    }
-
-    getUriLabel(element: object): string {
-        const contributions = this.findContribution(element);
-        for (const contribution of contributions) {
-            const value = contribution.getUriLabel && contribution.getUriLabel(element);
-            if (value === undefined) {
-                continue;
-            }
-            return value;
-        }
-        return '';
     }
 
     protected findContribution(element: object): LabelProviderContribution[] {

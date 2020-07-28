@@ -60,7 +60,7 @@ export class EditorWidgetFactory implements WidgetFactory {
     }
 
     private setLabels(editor: EditorWidget, uri: URI): void {
-        editor.title.caption = this.labelProvider.getUriLabel(uri);
+        editor.title.caption = this.labelProvider.getLongName(uri);
         const icon = this.labelProvider.getIcon(uri);
         editor.title.label = this.labelProvider.getName(uri);
         editor.title.iconClass = icon + ' file-icon';

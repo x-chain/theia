@@ -51,6 +51,12 @@ export class WorkspaceUriLabelProviderContribution extends DefaultUriLabelProvid
      */
     getLongName(element: URI | URIIconReference | FileStat): string | undefined {
         const uri = this.getUri(element);
+        if (uri) {
+            const formatting = this.findFormatting(uri);
+            if (formatting) {
+                return this.formatUri(uri, formatting);
+            }
+        }
         const relativePath = uri && this.workspaceVariable.getWorkspaceRelativePath(uri);
         return relativePath || super.getLongName(this.asURIIconReference(element));
     }
