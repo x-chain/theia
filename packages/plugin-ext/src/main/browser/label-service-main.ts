@@ -16,20 +16,27 @@
 
 import { LabelServiceMain } from '../../common/plugin-api-rpc';
 import { interfaces } from 'inversify';
-import { Disposable } from '@theia/core/lib/common/disposable';
-import { LabelProvider, ResourceLabelFormatter } from '@theia/core/lib/browser';
+import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
+import { DefaultUriLabelProviderContribution, LabelProviderContribution, ResourceLabelFormatter } from '@theia/core/lib/browser';
+import { ContributionProvider } from '@theia/core/lib/common';
 
 export class LabelServiceMainImpl implements LabelServiceMain {
     private readonly resourceLabelFormatters = new Map<number, Disposable>();
-    private readonly labelProvider: LabelProvider;
+    private readonly contributionProvider: ContributionProvider<LabelProviderContribution>;
 
     constructor(container: interfaces.Container) {
-        this.labelProvider = container.get(LabelProvider);
+        this.contributionProvider = container.getNamed(ContributionProvider, LabelProviderContribution);
     }
 
     $registerResourceLabelFormatter(handle: number, formatter: ResourceLabelFormatter): void {
         formatter.priority = true;
-        this.resourceLabelFormatters.set(handle, this.labelProvider.registerFormatter(formatter));
+        const disposables: DisposableCollection = new DisposableCollection();
+        for (const contribution of this.contributionProvider.getContributions()) {
+            if (contribution instanceof DefaultUriLabelProviderContribution) {
+                disposables.push(contribution.registerFormatter(formatter));
+            }
+        }
+        this.resourceLabelFormatters.set(handle, disposables);
     }
 
     $unregisterResourceLabelFormatter(handle: number): void {

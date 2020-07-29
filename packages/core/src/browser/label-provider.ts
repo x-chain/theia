@@ -19,7 +19,7 @@ import * as fileIcons from 'file-icons-js';
 import URI from '../common/uri';
 import { ContributionProvider } from '../common/contribution-provider';
 import { Prioritizeable } from '../common/types';
-import { Event, Emitter, Disposable, DisposableCollection } from '../common';
+import { Event, Emitter, Disposable } from '../common';
 import { FrontendApplicationContribution } from './frontend-application';
 import { EnvVariable, EnvVariablesServer } from '../common/env-variables/env-variables-protocol';
 import { PathUtils } from '../common/path-utils';
@@ -83,8 +83,6 @@ export interface LabelProviderContribution {
      * to perform a recursive check.
      */
     affects?(element: object, event: DidChangeLabelEvent): boolean;
-
-    registerFormatter?(formatter: ResourceLabelFormatter): Disposable;
 
 }
 
@@ -394,17 +392,6 @@ export class LabelProvider implements FrontendApplicationContribution {
             return value;
         }
         return '';
-    }
-
-    registerFormatter(formatter: ResourceLabelFormatter): Disposable {
-        const disposables: DisposableCollection = new DisposableCollection();
-        const contributions = this.findContribution(new URI().withScheme(formatter.scheme));
-        for (const contribution of contributions) {
-            if (contribution.registerFormatter) {
-                disposables.push(contribution.registerFormatter(formatter));
-            }
-        }
-        return disposables;
     }
 
     protected findContribution(element: object): LabelProviderContribution[] {
