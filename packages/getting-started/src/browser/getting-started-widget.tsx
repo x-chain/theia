@@ -21,11 +21,11 @@ import { ReactWidget } from '@theia/core/lib/browser/widgets/react-widget';
 import { CommandRegistry, isOSX, environment } from '@theia/core/lib/common';
 import { WorkspaceCommands, WorkspaceService } from '@theia/workspace/lib/browser';
 import { FileStat, FileSystem } from '@theia/filesystem/lib/common/filesystem';
-import { FileSystemUtils } from '@theia/filesystem/lib/common/filesystem-utils';
 import { KeymapsCommands } from '@theia/keymaps/lib/browser';
 import { CommonCommands, LabelProvider } from '@theia/core/lib/browser';
 import { ApplicationInfo, ApplicationServer } from '@theia/core/lib/common/application-protocol';
 import { FrontendApplicationConfigProvider } from '@theia/core/lib/browser/frontend-application-config-provider';
+import { PathUtils } from '@theia/core/lib/common/path-utils';
 
 /**
  * Default implementation of the `GettingStartedWidget`.
@@ -260,7 +260,7 @@ export class GettingStartedWidget extends ReactWidget {
         workspaces.forEach(workspace => {
             const uri = new URI(workspace);
             const pathLabel = this.labelProvider.getLongName(uri);
-            const path = this.home ? FileSystemUtils.tildifyPath(pathLabel, this.home) : pathLabel;
+            const path = this.home ? PathUtils.tildifyPath(pathLabel, this.home) : pathLabel;
             paths.push(path);
         });
         return paths;

@@ -21,7 +21,8 @@ import { WorkspaceService } from './workspace-service';
 import { getTemporaryWorkspaceFileUri } from '../common';
 import { WorkspacePreferences } from './workspace-preferences';
 import URI from '@theia/core/lib/common/uri';
-import { FileSystem, FileSystemUtils } from '@theia/filesystem/lib/common';
+import { FileSystem } from '@theia/filesystem/lib/common';
+import { PathUtils } from '@theia/core/lib/common/path-utils';
 import * as moment from 'moment';
 
 @injectable()
@@ -65,7 +66,7 @@ export class QuickOpenWorkspace implements QuickOpenModel {
             const iconClass = icon === '' ? undefined : icon + ' file-icon';
             this.items.push(new QuickOpenGroupItem({
                 label: uri.path.base,
-                description: (home) ? FileSystemUtils.tildifyPath(uri.path.toString(), home) : uri.path.toString(),
+                description: (home) ? PathUtils.tildifyPath(uri.path.toString(), home) : uri.path.toString(),
                 groupLabel: `last modified ${moment(stat.lastModification).fromNow()}`,
                 iconClass,
                 run: (mode: QuickOpenMode): boolean => {

@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (C) 2018 TypeFox and others.
+ * Copyright (C) 2018 Ericsson and others.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0 which is available at
@@ -13,28 +13,25 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
+import { Path } from './path';
 
-export function* split(s: string, splitter: string): IterableIterator<string> {
-    let start = 0;
-    while (start < s.length) {
-        let end = s.indexOf(splitter, start);
-        if (end === -1) {
-            end = s.length;
+export namespace PathUtils {
+
+    /**
+     * Tildify path, replacing `home` with `~` if user's `home` is present at the beginning of the path.
+     * This is a non-operation for Windows.
+     *
+     * @param resourcePath
+     * @param home
+     */
+    export function tildifyPath(resourcePath: string, home: string): string {
+        const path = new Path(resourcePath);
+        const isWindows = path.root && Path.isDrive(path.root.base);
+
+        if (!isWindows && home && resourcePath.indexOf(`${home}/`) === 0) {
+            return resourcePath.replace(`${home}/`, '~/');
         }
 
-        yield s.substring(start, end);
-        start = end + splitter.length;
+        return resourcePath;
     }
-}
-
-export function escapeInvisibleChars(value: string): string {
-    return value.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-}
-
-export function unescapeInvisibleChars(value: string): string {
-    return value.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
-}
-
-export function escapeRegExpCharacters(value: string): string {
-    return value.replace(/[\-\\\{\}\*\+\?\|\^\$\.\[\]\(\)\#]/g, '\\$&');
 }

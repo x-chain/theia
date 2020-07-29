@@ -19,8 +19,10 @@ import * as fileIcons from 'file-icons-js';
 import URI from '../common/uri';
 import { ContributionProvider } from '../common/contribution-provider';
 import { Prioritizeable } from '../common/types';
-import { Event, Emitter, Disposable, DisposableCollection, isWindows, OS, startsWithIgnoreCase } from '../common';
+import { Event, Emitter, Disposable, DisposableCollection } from '../common';
 import { FrontendApplicationContribution } from './frontend-application';
+import { EnvVariable, EnvVariablesServer } from '../common/env-variables/env-variables-protocol';
+import { PathUtils } from '../common/path-utils';
 
 /**
  * @internal don't export it, use `LabelProvider.folderIcon` instead.
@@ -145,6 +147,17 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
 
     protected formatters: ResourceLabelFormatter[] = [];
     protected readonly onDidChangeEmitter = new Emitter<DidChangeLabelEvent>();
+    protected homePath: string | undefined;
+    constructor(@inject(EnvVariablesServer) protected readonly envVariablesServer: EnvVariablesServer) {
+        const setHomePath = (variable: EnvVariable | undefined) => {
+            if (variable && variable.value) {
+                this.homePath = variable.value;
+            }
+        };
+        this.envVariablesServer.getValue('HOME').then(variable => setHomePath(variable));
+        this.envVariablesServer.getValue('HOMEPATH').then(variable => setHomePath(variable));
+        this.envVariablesServer.getValue('USERPROFILE').then(variable => setHomePath(variable));
+    }
 
     canHandle(element: object): number {
         if (element instanceof URI || URIIconReference.is(element)) {
@@ -204,12 +217,12 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
     registerFormatter(formatter: ResourceLabelFormatter): Disposable {
         this.formatters.push(formatter);
         this.onDidChangeEmitter.fire({
-            affects: (element: URI) => this.canHandle(element) === 1
+            affects: (element: URI) => this.canHandle(element) > 1
         });
         return Disposable.create(() => {
             this.formatters = this.formatters.filter(f => f !== formatter);
             this.onDidChangeEmitter.fire({
-                affects: (element: URI) => this.canHandle(element) === 1
+                affects: (element: URI) => this.canHandle(element) > 1
             });
         });
     }
@@ -224,7 +237,7 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
     *  Licensed under the MIT License. See License.txt in the project root for license information.
     *--------------------------------------------------------------------------------------------*/
     private readonly labelMatchingRegexp = /\${(scheme|authority|path|query)}/g;
-    formatUri(resource: URI, formatting: ResourceLabelFormatting): string {
+    protected formatUri(resource: URI, formatting: ResourceLabelFormatting): string {
         let label = formatting.label.replace(this.labelMatchingRegexp, (match, token) => {
             switch (token) {
                 case 'scheme': return resource.scheme;
@@ -241,8 +254,7 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
         }
 
         if (formatting.tildify) {
-            const homePath = process.env.HOMEPATH;
-            label = this.tildify(label, homePath ? homePath : '');
+            label = PathUtils.tildifyPath(label, this.homePath ? this.homePath : '');
         }
         if (formatting.authorityPrefix && resource.authority) {
             label = formatting.authorityPrefix + label;
@@ -260,31 +272,12 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
         return !!(path && path[2] === ':');
     }
 
-    // copied and modified from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/base/common/labels.ts#L107-L125
-    /*---------------------------------------------------------------------------------------------
-    *  Copyright (c) Microsoft Corporation. All rights reserved.
-    *  Licensed under the MIT License. See License.txt in the project root for license information.
-    *--------------------------------------------------------------------------------------------*/
-    private tildify(path: string, userHome: string): string {
-        if (isWindows || !path || !userHome) {
-            return path; // unsupported
-        }
-        const normalizedUserHome = new URI(userHome).normalizePath().toString();
-
-        // Linux: case sensitive, macOS: case insensitive
-        if (OS.type() === OS.Type.Linux ? path.startsWith(normalizedUserHome) : startsWithIgnoreCase(path, normalizedUserHome)) {
-            path = `~/${path.substr(normalizedUserHome.length)}`;
-        }
-
-        return path;
-    }
-
     // copied and modified from https://github.com/microsoft/vscode/blob/1.44.2/src/vs/workbench/services/label/common/labelService.ts#L108-L128
     /*---------------------------------------------------------------------------------------------
     *  Copyright (c) Microsoft Corporation. All rights reserved.
     *  Licensed under the MIT License. See License.txt in the project root for license information.
     *--------------------------------------------------------------------------------------------*/
-    findFormatting(resource: URI): ResourceLabelFormatting | undefined {
+    protected findFormatting(resource: URI): ResourceLabelFormatting | undefined {
         let bestResult: ResourceLabelFormatter | undefined;
 
         this.formatters.forEach(formatter => {

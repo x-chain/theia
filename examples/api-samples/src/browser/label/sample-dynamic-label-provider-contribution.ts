@@ -14,18 +14,19 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { DefaultUriLabelProviderContribution, DidChangeLabelEvent } from '@theia/core/lib/browser/label-provider';
 import URI from '@theia/core/lib/common/uri';
 import { Emitter, Event } from '@theia/core';
+import { EnvVariablesServer } from '@theia/core/lib/common/env-variables';
 
 @injectable()
 export class SampleDynamicLabelProviderContribution extends DefaultUriLabelProviderContribution {
 
     protected isActive: boolean = false;
 
-    constructor() {
-        super();
+    constructor(@inject(EnvVariablesServer) protected readonly envVariablesServer: EnvVariablesServer) {
+        super(envVariablesServer);
         const outer = this;
 
         setInterval(() => {

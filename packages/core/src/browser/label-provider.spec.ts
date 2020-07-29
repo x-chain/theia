@@ -17,39 +17,43 @@
 import { expect } from 'chai';
 import { DefaultUriLabelProviderContribution, URIIconReference } from './label-provider';
 import URI from '../common/uri';
+import { MockEnvVariablesServerImpl } from '../browser/test/mock-env-variables-server';
+import { FileUri } from '../node';
+import * as temp from 'temp';
 
 describe('DefaultUriLabelProviderContribution', function (): void {
 
+    const mockEnvVariablesServer = new MockEnvVariablesServerImpl(FileUri.create(temp.track().mkdirSync()));
     it('should return a short name', function (): void {
-        const prov = new DefaultUriLabelProviderContribution();
+        const prov = new DefaultUriLabelProviderContribution(mockEnvVariablesServer);
         const shortName = prov.getName(new URI('file:///tmp/hello/you.txt'));
 
         expect(shortName).eq('you.txt');
     });
 
     it('should return a long name', function (): void {
-        const prov = new DefaultUriLabelProviderContribution();
+        const prov = new DefaultUriLabelProviderContribution(mockEnvVariablesServer);
         const longName = prov.getLongName(new URI('file:///tmp/hello/you.txt'));
 
         expect(longName).eq('/tmp/hello/you.txt');
     });
 
     it('should return icon class for something that seems to be a file', function (): void {
-        const prov = new DefaultUriLabelProviderContribution();
+        const prov = new DefaultUriLabelProviderContribution(mockEnvVariablesServer);
         const icon = prov.getIcon(new URI('file:///tmp/hello/you.txt'));
 
         expect(icon).eq('text-icon medium-blue theia-file-icons-js');
     });
 
     it('should return file icon class for something that seems to be a directory', function (): void {
-        const prov = new DefaultUriLabelProviderContribution();
+        const prov = new DefaultUriLabelProviderContribution(mockEnvVariablesServer);
         const icon = prov.getIcon(new URI('file:///tmp/hello'));
 
         expect(icon).eq(prov.defaultFileIcon);
     });
 
     it('should return folder icon class for something that is a directory', function (): void {
-        const prov = new DefaultUriLabelProviderContribution();
+        const prov = new DefaultUriLabelProviderContribution(mockEnvVariablesServer);
         const icon = prov.getIcon(URIIconReference.create('folder', new URI('file:///tmp/hello')));
 
         expect(icon).eq(prov.defaultFolderIcon);
