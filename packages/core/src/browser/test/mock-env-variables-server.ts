@@ -34,7 +34,7 @@ export class MockEnvVariablesServerImpl implements EnvVariablesServer {
     }
 
     getValue(key: string): Promise<EnvVariable | undefined> {
-        throw new Error('Method not implemented.');
+        return Promise.resolve(undefined);
     }
 
 }
