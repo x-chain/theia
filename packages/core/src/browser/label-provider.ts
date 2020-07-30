@@ -215,12 +215,12 @@ export class DefaultUriLabelProviderContribution implements LabelProviderContrib
     registerFormatter(formatter: ResourceLabelFormatter): Disposable {
         this.formatters.push(formatter);
         this.onDidChangeEmitter.fire({
-            affects: (element: URI) => this.canHandle(element) > 1
+            affects: (element: URI) => this.canHandle(element) >= 1
         });
         return Disposable.create(() => {
             this.formatters = this.formatters.filter(f => f !== formatter);
             this.onDidChangeEmitter.fire({
-                affects: (element: URI) => this.canHandle(element) > 1
+                affects: (element: URI) => this.canHandle(element) >= 1
             });
         });
     }
