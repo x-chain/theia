@@ -32,6 +32,10 @@ import { WorkspaceService } from '@theia/workspace/lib/browser';
 import { WorkspaceUriLabelProviderContribution } from '@theia/workspace/lib/browser/workspace-uri-contribution';
 import { WorkspaceVariableContribution } from '@theia/workspace/lib/browser/workspace-variable-contribution';
 import { MockFilesystem } from '@theia/filesystem/lib/common/test/mock-filesystem';
+import { EnvVariablesServer } from '@theia/core/lib/common/env-variables';
+import { MockEnvVariablesServerImpl } from '@theia/core/lib/browser/test/mock-env-variables-server';
+import { FileUri } from '@theia/core/lib/node';
+import * as temp from 'temp';
 
 disableJSDOM();
 
@@ -61,6 +65,7 @@ before(() => {
     testContainer.bind(LabelProvider).toSelf().inSingletonScope();
     testContainer.bind(MarkerTreeLabelProvider).toSelf().inSingletonScope();
     testContainer.bind(TreeLabelProvider).toSelf().inSingletonScope();
+    testContainer.bind(EnvVariablesServer).toConstantValue(new MockEnvVariablesServerImpl(FileUri.create(temp.track().mkdirSync())));
 
     testContainer.bind<ContributionProvider<LabelProviderContribution>>(ContributionProvider).toDynamicValue(ctx => ({
         getContributions(): LabelProviderContribution[] {
