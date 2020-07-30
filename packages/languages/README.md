@@ -7,7 +7,7 @@ use VS Code extensions to contribute language smartness: https://code.visualstud
 
 <img src='https://raw.githubusercontent.com/eclipse-theia/theia/master/logo/theia.svg?sanitize=true' alt='theia-ext-logo' width='100px' />
 
-<h2>THEIA - LANGUAGES EXTENSION</h2>
+<h2>ECLIPSE THEIA - LANGUAGES EXTENSION</h2>
 
 <hr />
 
