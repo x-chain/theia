@@ -748,6 +748,10 @@ declare module monaco.theme {
     export interface ThemeIcon {
         readonly id: string;
     }
+    export namespace ThemeIcon {
+        export function fromString(value: string): ThemeIcon | undefined;
+        export function asClassName(icon: ThemeIcon): string | undefined;
+    }
 }
 
 declare module monaco.color {
@@ -1347,6 +1351,11 @@ declare module monaco.mime {
 declare module monaco.error {
     // https://github.com/theia-ide/vscode/blob/standalone/0.19.x/src/vs/base/common/errors.ts#L77
     export function onUnexpectedError(e: any): undefined;
+}
+
+declare module monaco.path {
+    // https://github.com/microsoft/vscode/blob/320fbada86c113835aef4fb9d7c4bc5b74678166/src/vs/base/common/path.ts#L1494
+    export function normalize(path: string): string;
 }
 
 declare module monaco.wordHelper {

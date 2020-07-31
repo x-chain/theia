@@ -451,7 +451,7 @@ export interface PluginModel {
     packageUri: string;
     /**
      * @deprecated since 1.1.0 - because it lead to problems with getting a relative path
-     * needed by Icon Themes to correcty load Fonts, use packageUri instead.
+     * needed by Icon Themes to correctly load Fonts, use packageUri instead.
      */
     packagePath: string;
     iconUrl?: string;
@@ -616,6 +616,7 @@ export interface PluginCommand {
     title: string;
     category?: string;
     iconUrl?: IconUrl;
+    themeIcon?: string;
 }
 
 export type IconUrl = string | { light: string; dark: string; };
