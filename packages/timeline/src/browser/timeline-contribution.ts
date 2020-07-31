@@ -19,7 +19,10 @@ import {
     FrontendApplicationContribution,
     FrontendApplication,
     ViewContainer,
-    WidgetManager, Widget
+    WidgetManager,
+    Widget,
+    ApplicationShell,
+    Navigatable
 } from '@theia/core/lib/browser';
 import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
 import { EXPLORER_VIEW_CONTAINER_ID } from '@theia/navigator/lib/browser';
@@ -27,7 +30,6 @@ import { TimelineWidget } from './timeline-widget';
 import { TimelineService } from './timeline-service';
 import { Command, CommandRegistry } from '@theia/core/lib/common';
 import { TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 
 @injectable()
 export class TimelineContribution implements FrontendApplicationContribution {
@@ -42,13 +44,11 @@ export class TimelineContribution implements FrontendApplicationContribution {
     protected readonly commandRegistry: CommandRegistry;
     @inject(TabBarToolbarRegistry)
     protected readonly tabBarToolbar: TabBarToolbarRegistry;
-    @inject(EditorManager)
-    protected readonly editorManager: EditorManager;
+    @inject(ApplicationShell)
+    protected readonly shell: ApplicationShell;
 
     public static readonly LOAD_MORE_COMMAND: Command = {
-        id: 'timeline-load-more',
-        label: 'Refresh',
-        iconClass: 'fa fa-refresh'
+        id: 'timeline-load-more'
     };
 
     async onDidInitializeLayout?(app: FrontendApplication): Promise<void> {
@@ -79,11 +79,17 @@ export class TimelineContribution implements FrontendApplicationContribution {
             isEnabled: widget => this.checkWidget(widget, () => true),
             isVisible: widget => this.checkWidget(widget, () => true)
         });
+        let navigable: Navigatable;
+        this.shell.onDidChangeCurrentWidget(event => {
+            const oldValue = event.oldValue;
+            if (oldValue && Navigatable.is(oldValue)) {
+                navigable = oldValue;
+            }
+        });
         this.commandRegistry.registerCommand(TimelineContribution.LOAD_MORE_COMMAND, {
             execute: () => {
-                const current = this.editorManager.currentEditor;
-                if (current instanceof EditorWidget) {
-                    const uri = current.getResourceUri();
+                if (navigable) {
+                    const uri = navigable.getResourceUri();
                     if (uri) {
                         timeline.loadTimeline(uri, false);
                     }

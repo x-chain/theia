@@ -29,13 +29,11 @@ import {
     Widget
 } from '@theia/core/lib/browser';
 import { TimelineTreeWidget } from './timeline-tree-widget';
-import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { TimelineService } from './timeline-service';
 import { CommandRegistry } from '@theia/core/lib/common';
 import { TimelineEmptyWidget } from './timeline-empty-widget';
 import { toArray } from '@phosphor/algorithm';
 import URI from '@theia/core/lib/common/uri';
-import { EditorPreviewWidget } from '@theia/editor-preview/lib/browser';
 import { TimelineProvidersChangeEvent } from '../common/timeline-model';
 import { TimelineAggregate } from './timeline-service';
 
@@ -53,7 +51,7 @@ export class TimelineWidget extends BaseWidget {
     @inject(ApplicationShell) protected readonly applicationShell: ApplicationShell;
     @inject(TimelineEmptyWidget) protected readonly timelineEmptyWidget: TimelineEmptyWidget;
 
-    constructor(@inject(EditorManager) protected readonly editorManager: EditorManager) {
+    constructor() {
         super();
         this.id = TimelineWidget.ID;
         this.addClass('theia-timeline');
@@ -75,20 +73,16 @@ export class TimelineWidget extends BaseWidget {
         this.refresh();
         this.refreshList();
         this.toDispose.push(this.timelineService.onDidChangeTimeline(event => {
-                const current = this.editorManager.currentEditor;
-                if (NavigatableWidget.is(current) && event.uri && event.uri.toString() === current.getResourceUri()?.toString()) {
-                    this.loadTimeline(event.uri, event.reset);
-                } else {
-                    const uri = this.editorManager.currentEditor?.getResourceUri();
-                    if (uri) {
-                        this.loadTimeline(uri, event.reset);
-                    }
+                const currentWidgetUri = this.getCurrentWidgetUri();
+                if (currentWidgetUri ) {
+                    this.loadTimeline(currentWidgetUri, event.reset);
                 }
             })
         );
-        this.toDispose.push(this.editorManager.onCurrentEditorChanged(async editor => {
-            if (NavigatableWidget.is(editor)) {
-                const uri = editor.getResourceUri();
+        this.toDispose.push(this.applicationShell.onDidChangeCurrentWidget(async event => {
+            const current = event.newValue;
+            if (current && NavigatableWidget.is(current)) {
+                const uri = current.getResourceUri();
                 if (uri) {
                     this.timelineEmptyWidget.hide();
                     this.resourceWidget.show();
@@ -96,14 +90,7 @@ export class TimelineWidget extends BaseWidget {
                 }
                 return;
             }
-            if (!toArray(this.applicationShell.mainPanel.widgets()).find(widget => {
-                if (widget instanceof EditorWidget || widget instanceof EditorPreviewWidget) {
-                    const uri = widget.getResourceUri();
-                    if (uri?.scheme && this.timelineService.getSchemas().indexOf(uri?.scheme) > -1) {
-                        return true;
-                    }
-                }
-            })) {
+            if (!this.suitableWidgetsOpened()) {
                 this.resourceWidget.hide();
                 this.timelineEmptyWidget.show();
             }
@@ -112,7 +99,8 @@ export class TimelineWidget extends BaseWidget {
     }
 
     private onProvidersChanged(event: TimelineProvidersChangeEvent): void {
-        const currentUri = this.editorManager.currentEditor?.getResourceUri();
+        const current = this.applicationShell.currentWidget;
+        const currentUri = NavigatableWidget.is(current) ? current.getResourceUri() : undefined;
         if (event.removed) {
             for (const source of event.removed) {
                 this.timelinesBySource.delete(source);
@@ -158,16 +146,31 @@ export class TimelineWidget extends BaseWidget {
     }
 
     refreshList(): void {
-        const current = this.editorManager.currentEditor;
-        const uri = NavigatableWidget.is(current) ? current.getResourceUri() : undefined;
+        const uri = this.getCurrentWidgetUri();
         if (uri) {
             this.timelineEmptyWidget.hide();
             this.resourceWidget.show();
             this.loadTimeline(uri, true);
-        } else {
+        } else if (!this.suitableWidgetsOpened()) {
             this.timelineEmptyWidget.show();
             this.resourceWidget.hide();
         }
+    }
+
+    private suitableWidgetsOpened(): boolean {
+        return !!toArray(this.applicationShell.mainPanel.widgets()).find(widget => {
+            if (NavigatableWidget.is(widget)) {
+                const uri = widget.getResourceUri();
+                if (uri?.scheme && this.timelineService.getSchemas().indexOf(uri?.scheme) > -1) {
+                    return true;
+                }
+            }
+        });
+    }
+
+    private getCurrentWidgetUri(): URI | undefined {
+        const current = this.applicationShell.currentWidget;
+        return  NavigatableWidget.is(current) ? current.getResourceUri() : undefined;
     }
 
     protected get containerLayout(): PanelLayout {

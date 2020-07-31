@@ -18,7 +18,6 @@ import { injectable, inject } from 'inversify';
 import { CommandRegistry, MenuModelRegistry, MenuPath } from '@theia/core/lib/common';
 import { TreeWidget, TreeProps, NodeProps, TREE_NODE_SEGMENT_GROW_CLASS } from '@theia/core/lib/browser/tree';
 import { ContextMenuRenderer } from '@theia/core/lib/browser';
-import { EditorManager } from '@theia/editor/lib/browser';
 import { TimelineNode, TimelineTreeModel } from './timeline-tree-model';
 import { TimelineService } from './timeline-service';
 import { TimelineContextKeyService } from './timeline-context-key-service';
@@ -33,7 +32,6 @@ export class TimelineTreeWidget extends TreeWidget {
     static ID = 'timeline-tree-widget';
     static PAGE_SIZE = 20;
 
-    @inject(EditorManager) protected readonly editorManager: EditorManager;
     @inject(MenuModelRegistry) protected readonly menus: MenuModelRegistry;
     @inject(TimelineContextKeyService) protected readonly contextKeys: TimelineContextKeyService;
 
